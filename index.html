@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.3.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.3.1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,13 +55,24 @@ nav.tabs button .tj{font-family:var(--f-display);font-size:.72rem;font-weight:60
 nav.tabs button:hover{color:var(--ink)}
 nav.tabs button[aria-current="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--kiai)}
 nav.tabs button[aria-current="true"] .tj{color:var(--kiai);opacity:1}
+.mob-only{display:none!important}
+#moresheet{position:fixed;inset:0;z-index:40}
+#moresheet .ms-back{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#moresheet .ms-panel{position:absolute;left:8px;right:8px;bottom:calc(72px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--kiai);display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#moresheet .ms-panel button{display:flex;align-items:center;gap:10px;padding:14px 12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);font-weight:600;cursor:pointer;text-align:left}
+#moresheet .ms-panel button .tj{font-family:var(--f-display);font-size:1.25rem;color:var(--muted);white-space:nowrap;flex:none}
+#moresheet .ms-panel button[aria-current="true"]{border-color:var(--kiai)}
+#moresheet .ms-panel button[aria-current="true"] .tj{color:var(--kiai)}
+@media (max-width:700px){nav.tabs .mob-only{display:flex!important}}
 /* Telefoon: compacte kop, tabbladen als balk onderaan met de kanji als pictogram, grotere tikvlakken */
 @media (max-width:700px){
   header.top::after{width:60%}
   .brand{padding-block:8px;gap:10px}.brand .sub,.mode{display:none}
   .kanji{width:18px;height:46px}.dojologo{height:40px}.brand h1{font-size:1.1rem}
   nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:2px solid var(--kiai);padding:0 4px env(safe-area-inset-bottom,0px);justify-content:flex-start}
-  nav.tabs button{min-width:68px;padding:7px 6px 8px;border-bottom:0;border-top:3px solid transparent;font-size:.68rem}
+  nav.tabs button{flex:1 1 0;min-width:0;padding:7px 2px 8px;border-bottom:0;border-top:3px solid transparent;font-size:.68rem}
+  nav.tabs button.sec{display:none}
+  nav.tabs{justify-content:space-around;overflow:visible}
   nav.tabs button .tj{font-size:1.05rem;letter-spacing:.02em;opacity:1;margin-bottom:2px}
   nav.tabs button[aria-current="true"]{border-top-color:var(--kiai);border-bottom:0}
   main{padding-block:14px 96px}.appfoot{padding-bottom:96px}
@@ -246,7 +257,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.3.0",date:"2026-10-17",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.3.1",date:"2026-10-17",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -744,7 +755,12 @@ function examPlan(gid,examDate){
 // shinsa (graduatie-examen), shiai (wedstrijd), kamoku (examenonderdelen), settei (instellingen).
 const TABS=[["overzicht","Overzicht","概要"],["leerlingen","Leerlingen","門下生"],["lessen","Lessen","稽古"],["aanwezigheid","Aanwezigheid","出席"],["examen","Examen","審査"],["wedstrijden","Wedstrijden","試合"],["programma","Examenprogramma","課目"],["instellingen","Instellingen","設定"]];
 function render(){
-  $("#tabs").innerHTML=TABS.map(([k,l,j])=>`<button data-act="tab" data-v="${k}" aria-current="${S.tab===k}"><span class="tj" lang="ja" aria-hidden="true">${j}</span>${l}</button>`).join("");
+  // Op de telefoon: 4 hoofdtabbladen + "Meer" (de overige tabbladen in een paneel boven de balk).
+  const MAIN=["overzicht","leerlingen","lessen","aanwezigheid"];const cur=TABS.find(t=>t[0]===S.tab)||TABS[0];const inMore=!MAIN.includes(S.tab);
+  $("#tabs").innerHTML=TABS.map(([k,l,j])=>`<button data-act="tab" data-v="${k}" aria-current="${S.tab===k}" ${MAIN.includes(k)?"":'class="sec"'}><span class="tj" lang="ja" aria-hidden="true">${j}</span>${l}</button>`).join("")+
+    `<button class="mob-only" data-act="moreToggle" aria-expanded="${!!S.moreOpen}" aria-current="${inMore}"><span class="tj" lang="ja" aria-hidden="true">${inMore?cur[2]:"他"}</span>${inMore?cur[1].replace("Examenprogramma","Programma"):"Meer"}</button>`;
+  let sheet=document.getElementById("moresheet");if(!sheet){sheet=document.createElement("div");sheet.id="moresheet";document.body.appendChild(sheet)}
+  sheet.hidden=!S.moreOpen;sheet.innerHTML=S.moreOpen?`<div class="ms-back" data-act="moreToggle"></div><div class="ms-panel" role="menu">${TABS.filter(t=>!MAIN.includes(t[0])).map(([k,l,j])=>`<button data-act="tab" data-v="${k}" aria-current="${S.tab===k}" role="menuitem"><span class="tj" lang="ja">${j}</span><span>${l}</span></button>`).join("")}</div>`:"";
   const td=trainingDays().slice().sort((a,b)=>WEEK_ORDER.indexOf(a)-WEEK_ORDER.indexOf(b)).map(d=>DAYS[d]).join(" en ");
   const dn=dojoShortName();
   $("#apptitle").textContent=dn?(/^dojo\b/i.test(dn)?dn:"Dojo "+dn):APP.name;
@@ -1548,7 +1564,8 @@ function setProg(sid,item,v){
   Store.patch("students",sid,{progress:{[item]:v}});
 }
 const ACT={
-  tab:el=>{S.tab=el.dataset.v;S.confirm=null;try{localStorage.setItem("kyo-tab",S.tab)}catch(e){}render();window.scrollTo({top:0})},
+  tab:el=>{S.tab=el.dataset.v;S.confirm=null;S.moreOpen=false;try{localStorage.setItem("kyo-tab",S.tab)}catch(e){}render();window.scrollTo({top:0})},
+  moreToggle:()=>{S.moreOpen=!S.moreOpen;render()},
   sview:el=>{S.studentView=el.dataset.v;render()},
   selStudent:el=>{const changed=(el.dataset.id||null)!==S.selStudent;S.selStudent=el.dataset.id||null;S.progGrade=null;S.confirm=null;render();
     if(changed)window.scrollTo({top:0,behavior:"instant"})},
