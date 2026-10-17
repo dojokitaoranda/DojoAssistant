@@ -1,0 +1,50 @@
+DOJO ASSISTANT - mobiele app (telefoon en tablet)
+Gemaakt door Robert Ytsma
+
+WAT IS HET
+Dezelfde app als op de laptop, maar als app op je telefoon. Met een
+tabbalk onderaan, grote vakken om aanwezigheid af te vinken en de dojo-modus
+voor tijdens de les. Na de eerste keer openen werkt hij ook zonder internet.
+Je gegevens blijven op de telefoon.
+Hetzelfde webadres kun je ook op de laptop openen (en installeren via het
+icoon in de adresbalk van Edge of Chrome). Laptop en telefoon houden elk hun
+eigen gegevens; die houd je gelijk met synchroniseren (zie punt 3).
+
+1. ONLINE ZETTEN (eenmalig, door de beheerder)
+Een telefoon kan een losse HTML-app niet goed vanuit een bestand draaien.
+Zet daarom de inhoud van deze map op een webadres met https, bijvoorbeeld:
+- GitHub Pages (gratis): maak een repository, upload alle bestanden uit deze
+  map, zet onder Settings > Pages de publicatie aan.
+- De webruimte van de dojo of club (een eigen map, bijv. /DojoAssistant/).
+Er staan geen persoonsgegevens in deze bestanden; die blijven op de toestellen.
+
+Bestanden die online moeten: index.html, manifest.webmanifest, sw.js,
+icon-180.png, icon-192.png, icon-512.png.
+
+2. INSTALLEREN OP DE TELEFOON
+- Open het webadres in Chrome (Android) of Safari (iPhone).
+- Android: menu (drie puntjes) > "App installeren" of "Toevoegen aan startscherm".
+- iPhone: deelknop > "Zet op beginscherm".
+- Open de app via het nieuwe pictogram (de kanji).
+
+3. SYNCHRONISEREN MET DE LAPTOP
+Laptop en telefoon hebben elk hun eigen gegevens. Zo houd je ze gelijk:
+a) Geef elk apparaat een naam: Instellingen > Synchroniseren > "Naam van dit
+   apparaat" (bijv. Laptop, Telefoon).
+b) Op de telefoon: Instellingen > "Sync-bestand maken". Deel het bestand naar
+   je laptop (OneDrive, e-mail of WhatsApp naar jezelf).
+c) Op de laptop: Instellingen > "Sync-bestand inlezen" > kies het bestand >
+   "Samenvoegen".
+d) Doe daarna hetzelfde andersom (laptop > telefoon), zodat beide gelijk zijn.
+
+Hoe samenvoegen werkt:
+- Per leerling, les en wedstrijd wint de nieuwste wijziging.
+- Aanwezigheid en afgetekende examenonderdelen van beide apparaten blijven bewaard.
+- Wat je op het ene apparaat verwijdert, wordt ook op het andere verwijderd.
+- Er wordt nooit iets overschreven dat op het ontvangende apparaat nieuwer is.
+Tip: synchroniseer na elke les of minstens wekelijks.
+
+4. NIEUWE VERSIE
+Zet de nieuwe bestanden over de oude heen op het webadres. De app op de
+telefoon haalt de nieuwe versie op zodra hij online wordt geopend.
+Het versienummer staat onderaan in de app.
