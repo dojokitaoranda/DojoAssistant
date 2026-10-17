@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.3.1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.3.2"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +33,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .wrap{max-width:1180px;margin:0 auto;padding-inline:16px}
 
 /* Kop: papier met een vage seigaiha-golf rechts en een dunne rode lijn eronder */
-header.top{background:var(--surface);border-bottom:2px solid var(--kiai);position:sticky;top:env(safe-area-inset-top,0px);z-index:20;overflow:hidden}
+header.top{background:var(--surface);border-bottom:2px solid var(--kiai);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
 header.top::after{content:"";position:absolute;inset:0 0 0 auto;width:min(46%,520px);pointer-events:none;background:var(--line);opacity:.55;
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20'%3E%3Cg fill='none' stroke='black' stroke-width='1.1'%3E%3Cpath d='M0 20a20 20 0 0 1 40 0M6 20a14 14 0 0 1 28 0M12 20a8 8 0 0 1 16 0'/%3E%3Cpath d='M-20 10a20 20 0 0 1 40 0M-14 10a14 14 0 0 1 28 0M-8 10a8 8 0 0 1 16 0M20 10a20 20 0 0 1 40 0M26 10a14 14 0 0 1 28 0M32 10a8 8 0 0 1 16 0'/%3E%3C/g%3E%3C/svg%3E") 0 0/40px 20px,linear-gradient(90deg,transparent,#000 60%);
   -webkit-mask-composite:source-in;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20'%3E%3Cg fill='none' stroke='black' stroke-width='1.1'%3E%3Cpath d='M0 20a20 20 0 0 1 40 0M6 20a14 14 0 0 1 28 0M12 20a8 8 0 0 1 16 0'/%3E%3Cpath d='M-20 10a20 20 0 0 1 40 0M-14 10a14 14 0 0 1 28 0M-8 10a8 8 0 0 1 16 0M20 10a20 20 0 0 1 40 0M26 10a14 14 0 0 1 28 0M32 10a8 8 0 0 1 16 0'/%3E%3C/g%3E%3C/svg%3E") 0 0/40px 20px,linear-gradient(90deg,transparent,#000 60%);mask-composite:intersect}
@@ -66,6 +66,8 @@ nav.tabs button[aria-current="true"] .tj{color:var(--kiai);opacity:1}
 @media (max-width:700px){nav.tabs .mob-only{display:flex!important}}
 /* Telefoon: compacte kop, tabbladen als balk onderaan met de kanji als pictogram, grotere tikvlakken */
 @media (max-width:700px){
+  /* Safari (iPhone) knipt een vaste balk weg als die in een 'sticky' kop zit: kop op de telefoon gewoon laten meescrollen. */
+  header.top{position:relative;top:auto}
   header.top::after{width:60%}
   .brand{padding-block:8px;gap:10px}.brand .sub,.mode{display:none}
   .kanji{width:18px;height:46px}.dojologo{height:40px}.brand h1{font-size:1.1rem}
@@ -257,7 +259,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.3.1",date:"2026-10-17",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.3.2",date:"2026-10-17",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -779,7 +781,10 @@ function render(){
   if(S.dojo)renderDojo();
 }
 function renderFoot(){const f=document.getElementById("appfoot");if(f&&!f.dataset.done){f.dataset.done="1";f.innerHTML=`<span><span class="osu" lang="ja" title="Osu">押忍</span> ${h(APP.name)} · versie ${h(APP.version)}</span><span>© ${APP.date.slice(0,4)} ${h(APP.author)}</span>`}}
-function setHdr(){renderFoot();const hd=document.querySelector("header.top");if(hd&&hd.offsetHeight)document.documentElement.style.setProperty("--hdr",hd.offsetHeight+"px")}
+/* Telefoon: tabbalk direct onder <body> hangen (los van de kop), zodat iOS Safari hem nooit kan wegknippen. */
+function placeNav(){const nav=document.getElementById("tabs");if(!nav)return;const mob=window.matchMedia&&window.matchMedia("(max-width:700px)").matches;
+  const home=document.querySelector("header.top > .wrap");if(mob&&nav.parentElement!==document.body)document.body.appendChild(nav);else if(!mob&&home&&nav.parentElement!==home)home.appendChild(nav)}
+function setHdr(){renderFoot();placeNav();const hd=document.querySelector("header.top");if(hd&&hd.offsetHeight)document.documentElement.style.setProperty("--hdr",hd.offsetHeight+"px")}
 /* Ledentabel precies tot de onderkant van het venster laten lopen, zodat alleen de tabel scrolt. */
 function fitTable(){const t=document.querySelector(".tscroll");if(!t)return;const top=t.getBoundingClientRect().top+window.scrollY;
   let mh=Math.max(240,Math.floor(window.innerHeight-top-16));t.style.maxHeight=mh+"px";
