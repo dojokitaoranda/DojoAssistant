@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.5.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.6.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -259,7 +259,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.5.0",date:"2026-10-18",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.6.0",date:"2026-10-18",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -741,6 +741,11 @@ const Cloud={client:null,dojo:null,dojoName:"",role:null,email:"",queue:[],statu
     }catch(e){this.status="offline";console.warn(e)}
     finally{this._busy=false;this.saveCache();renderMode();if(this.queue.length&&this.status==="online")setTimeout(()=>this.flush(),300)}},
   async sendCode(email){const cl=await this.getClient();const {error}=await cl.auth.signInWithOtp({email,options:{shouldCreateUser:true}});if(error)throw error},
+  // Beheerder: uitnodiging via de dojo-mail (Supabase + SMTP). De trainer krijgt de inlogmail met code, app-link en uitleg.
+  // Aparte client zonder sessie, zodat de ingelogde beheerder ingelogd blijft.
+  async sendInvite(email){const lib=await this.lib();
+    const cl=lib.createClient(CLOUD_CFG.url,CLOUD_CFG.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"kyo-cloud-invite"}});
+    const {error}=await cl.auth.signInWithOtp({email,options:{shouldCreateUser:true}});if(error)throw error},
   async verify(email,code){const cl=await this.getClient();const {data,error}=await cl.auth.verifyOtp({email,token:code,type:"email"});if(error)throw error;
     this.email=data.user?.email||email;this.session=true;await this.membership();return !!this.dojo},
   async logout(){try{await this.client?.auth.signOut()}catch(e){}
@@ -1621,8 +1626,9 @@ function vCloud(){
   if(Store.mode==="db")return "";
   const isCloud=Store.mode==="cloud";const L=S.login||{};
   const loginForm=`<div class="stack" style="gap:8px">
-      ${!L.sent?`<div class="row" style="flex-wrap:nowrap"><input type="email" id="cl-email" value="${h(L.email||"")}" placeholder="je e-mailadres" autocomplete="email" style="flex:1"><button class="btn primary" data-act="clSend" ${L.busy?"disabled":""}>${L.busy?"Versturen…":"Stuur inlogcode"}</button></div>`
-      :`<span class="small">We hebben een code gestuurd naar <b>${h(L.email)}</b>. Kijk ook in je spam.</span>
+      ${!L.sent?`<div class="row" style="flex-wrap:nowrap"><input type="email" id="cl-email" value="${h(L.email||"")}" placeholder="je e-mailadres" autocomplete="email" style="flex:1"><button class="btn primary" data-act="clSend" ${L.busy?"disabled":""}>${L.busy?"Versturen…":"Stuur inlogcode"}</button></div>
+        <div><button class="btn sm ghost" data-act="clHave">Ik heb al een code (uit de uitnodiging)</button></div>`
+      :`<span class="small">${L.have?`Vul de code uit de mail aan <b>${h(L.email)}</b> in. Verlopen? Kies "Ander e-mailadres" en vraag een nieuwe code aan.`:`We hebben een code gestuurd naar <b>${h(L.email)}</b>. Kijk ook in je spam.`}</span>
         <div class="row" style="flex-wrap:nowrap"><input type="text" id="cl-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="code uit de mail" style="flex:1;letter-spacing:.2em"><button class="btn primary" data-act="clVerify" ${L.busy?"disabled":""}>${L.busy?"Controleren…":"Inloggen"}</button></div>
         <div><button class="btn sm ghost" data-act="clReset">Ander e-mailadres</button></div>`}
       ${L.err?`<span class="small" style="color:var(--kiai)">${h(L.err)}</span>`:""}</div>`;
@@ -1652,11 +1658,12 @@ function vCloud(){
       </tbody></table></div>
       ${(()=>{const m=S.invite&&Cloud.members.find(x=>x.email===S.invite);if(!m)return "";const msg=inviteMsg(m);
         return `<div class="subbox"><b>Uitnodiging voor ${h(m.name||m.email)}</b>
-          <span class="small">Kies hoe je het bericht verstuurt. Je mail- of WhatsApp-app opent met de tekst al ingevuld; je verstuurt het zelf.</span>
+          <span class="small"><b>Mail versturen</b> stuurt direct een mail vanaf het dojo-adres naar ${h(m.email)}, met de link naar de app, uitleg en een inlogcode (1 uur geldig; daarna vraagt de trainer in de app zelf een nieuwe aan).${S.inviteSent?.[m.email]?` <b>Verstuurd om ${new Date(S.inviteSent[m.email]).toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"})}.</b>`:""}
+            Of stuur onderstaand bericht zelf via WhatsApp of een andere app.</span>
+          <div class="row"><button class="btn primary" data-act="clInvMail" ${S.inviteBusy?"disabled":""}>${S.inviteBusy?"Versturen…":S.inviteSent?.[m.email]?"Mail opnieuw versturen":"Mail versturen"}</button></div>
           <textarea readonly rows="12" style="width:100%;font-size:12px">${h(msg.text)}</textarea>
           <div class="row">
-            ${navigator.share?`<button class="btn primary" data-act="clInvShare">Delen…</button>`:""}
-            <a class="btn ${navigator.share?"":"primary"}" href="mailto:${h(m.email)}?subject=${encodeURIComponent(msg.subject)}&body=${encodeURIComponent(msg.text)}">Mail</a>
+            ${navigator.share?`<button class="btn" data-act="clInvShare">Delen…</button>`:""}
             <a class="btn" href="https://wa.me/?text=${encodeURIComponent(msg.text)}" target="_blank" rel="noopener">WhatsApp</a>
             <button class="btn" data-act="clInvCopy">Tekst kopiëren</button>
             <button class="btn ghost" data-act="clInvClose">Sluiten</button></div></div>`})()}
@@ -1774,6 +1781,13 @@ const ACT={
     S.login={email,busy:true};render();
     try{await Cloud.sendCode(email);S.login={email,sent:true}}catch(e){console.warn(e);S.login={email,err:e&&e.message==="lib"?"Geen verbinding met de online database. Controleer je internet.":"De code kon niet worden verstuurd. Probeer het over een minuut opnieuw."}}
     render()},
+  clHave:()=>{const email=($("#cl-email")?.value||"").trim();if(!/^\S+@\S+\.\S+$/.test(email)){S.login={email,err:"Vul eerst je e-mailadres in."};render();return}
+    S.login={email,sent:true,have:true};render()},
+  clInvMail:async()=>{const m=Cloud.members.find(x=>x.email===S.invite);if(!m)return;
+    if(S.inviteBusy)return;S.inviteBusy=true;render();
+    try{await Cloud.sendInvite(m.email);S.inviteSent={...(S.inviteSent||{}),[m.email]:Date.now()};toast(`Uitnodiging verstuurd naar ${m.email}.`)}
+    catch(e){console.warn(e);toast(/rate|seconds|security/i.test(e?.message||"")?"Er is net al een mail naar dit adres gestuurd. Probeer het over een minuut opnieuw.":"Versturen is niet gelukt. Controleer je internet of gebruik WhatsApp of Tekst kopiëren.")}
+    S.inviteBusy=false;render()},
   clVerify:async()=>{const L=S.login||{};const code=($("#cl-code")?.value||"").replace(/\s/g,"");if(!code){S.login={...L,err:"Vul de code uit de mail in."};render();return}
     S.login={...L,busy:true,err:""};render();
     try{const ok=await Cloud.verify(L.email,code);
