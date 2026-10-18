@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.3.4"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.4.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,7 +110,7 @@ main{padding-block:20px 60px}
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.sm{padding:3px 8px;font-size:.82rem}
 .btn:disabled{opacity:.45;cursor:default}
-input[type=text],input[type=date],input[type=number],input[type=search],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;min-width:0;max-width:100%}
+input[type=text],input[type=email],input[type=date],input[type=number],input[type=search],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;min-width:0;max-width:100%}
 textarea{width:100%;min-height:70px;resize:vertical}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -259,7 +259,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.3.4",date:"2026-10-17",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.4.0",date:"2026-10-18",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -472,7 +472,7 @@ function dojoShortName(){const k=dojoKey();const d=DOJOS.find(x=>x.id===k);if(d)
 function dojoLogoId(){const k=dojoKey();return k?(S.settings.dojoLogos||{})[k]||"":""}
 function dojoLogoData(){const k=dojoKey();return k?(S.settings.dojoLogoData||{})[k]||"":""}
 function dojoLogoSrc(){const d=dojoLogoData();if(d)return d;const id=dojoLogoId();if(id)return "/_blob/"+id;return DOJOS.find(x=>x.id===dojoKey())?.logo||""}
-const canUploadLogo=()=>!!S.assets||Store.mode==="local";
+const canUploadLogo=()=>!!S.assets||Store.mode==="local"||(Store.mode==="cloud"&&Cloud.role==="admin");
 const hasOwnLogo=()=>!!(dojoLogoId()||dojoLogoData());
 
 /* Aanwezigheid */
@@ -598,6 +598,8 @@ const Store={db:null,mode:"loading",
         requestRender()},err);
       db.collection("attendance").onSnapshot(s=>{S.attendance=s.docs.map(d=>({...clone(d.data()),id:d.id}));requestRender()},err);
       db.doc("settings/main").onSnapshot(d=>{S.settings=d.exists?clone(d.data()):{};requestRender()},err);
+    }else if(Cloud.enabled()){
+      await Cloud.start();return;
     }else{
       this.mode="local";
       try{const raw=JSON.parse(localStorage.getItem(LKEY)||"{}");S.students=raw.students||[];S.lessons=raw.lessons||[];S.attendance=raw.attendance||[];S.competitions=raw.competitions||[];S.settings=raw.settings||{};S.deleted=raw.deleted||{}}catch(e){}
@@ -605,29 +607,126 @@ const Store={db:null,mode:"loading",
     }
     renderMode();render();
   },
-  persistLocal(){try{localStorage.setItem(LKEY,JSON.stringify({students:S.students,lessons:S.lessons,attendance:S.attendance,competitions:S.competitions,settings:S.settings,deleted:S.deleted||{}}))}catch(e){}},
+  persistLocal(){if(this.mode==="cloud"){Cloud.saveCache();return}try{localStorage.setItem(LKEY,JSON.stringify({students:S.students,lessons:S.lessons,attendance:S.attendance,competitions:S.competitions,settings:S.settings,deleted:S.deleted||{}}))}catch(e){}},
   coll(c){return S[c]},
   // Elke wijziging krijgt een tijdstempel (updatedAt); verwijderingen worden onthouden (S.deleted) zodat synchroniseren ze niet terugzet.
   async put(c,id,data,keepTs){
     const body={...data};delete body.id;if(!keepTs)body.updatedAt=Date.now();
     if(this.db){await guard(()=>this.db.collection(c).doc(id).set(body))}
-    else{const a=this.coll(c);const i=a.findIndex(x=>x.id===id);const v={...clone(body),id};if(i>=0)a[i]=v;else a.push(v);this.persistLocal();requestRender()}
+    else{const a=this.coll(c);const i=a.findIndex(x=>x.id===id);const v={...clone(body),id};if(i>=0)a[i]=v;else a.push(v);if(this.mode==="cloud")Cloud.write(c,id,v);this.persistLocal();requestRender()}
   },
   async patch(c,id,data){
     data={...data,updatedAt:Date.now()};
     if(this.db){await guard(()=>this.db.collection(c).doc(id).update(data))}
-    else{const x=this.coll(c).find(x=>x.id===id);if(x){deepMerge(x,data);this.persistLocal();requestRender()}}
+    else{const x=this.coll(c).find(x=>x.id===id);if(x){deepMerge(x,data);if(this.mode==="cloud")Cloud.write(c,id,x);this.persistLocal();requestRender()}}
   },
   async del(c,id,ts){
     S.deleted=S.deleted||{};(S.deleted[c]=S.deleted[c]||{})[id]=ts||Date.now();
     if(this.db){await guard(()=>this.db.collection(c).doc(id).delete())}
-    else{const a=this.coll(c);const i=a.findIndex(x=>x.id===id);if(i>=0)a.splice(i,1);this.persistLocal();requestRender()}
+    else{const a=this.coll(c);const i=a.findIndex(x=>x.id===id);if(i>=0)a.splice(i,1);if(this.mode==="cloud")Cloud.write(c,id,{},true);this.persistLocal();requestRender()}
   },
   async settings(data){
     S.settings={...S.settings,...data,updatedAt:Date.now()};
     if(this.db){await guard(()=>this.db.doc("settings/main").set(S.settings))}
-    else{this.persistLocal();requestRender()}
+    else{if(this.mode==="cloud")Cloud.write("settings","main",S.settings);this.persistLocal();requestRender()}
   }
+};
+
+/* ============ ONLINE SAMENWERKEN (Supabase) ============
+   De app blijft dezelfde; bij 'cloud' komen de gegevens uit een gedeelde database met inloggen per trainer.
+   - Rechten bewaakt de database zelf (Row Level Security), zie supabase/01-database.sql.
+   - Privegegevens van leerlingen staan in een apart document (student_private); de rol 'trainer' kan die niet lezen.
+   - Wijzigingen gaan via een wachtrij: zonder internet blijven ze bewaard en gaan ze later alsnog mee.
+   - Live: wijzigingen van anderen komen direct binnen (realtime). */
+const CLOUD_CFG={url:"https://frjqyvwdohovuaainydx.supabase.co",key:"sb_publishable_PecWKdpVo9I8NsoFFwt7ug_otcJLGCM",
+  lib:"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"};
+const PRIV_FIELDS=["birthDate","birthYear","birthPlace","ifkNumber","nkaNumber","notes"];
+const ROLE_LABEL={admin:"beheerder",hoofdtrainer:"hoofdtrainer",trainer:"trainer"};
+const Cloud={client:null,dojo:null,dojoName:"",role:null,email:"",queue:[],status:"",live:false,members:[],session:false,
+  enabled(){try{return localStorage.getItem("kyo-cloud")==="1"}catch(e){return false}},
+  async lib(){if(window.supabase&&window.supabase.createClient)return window.supabase;
+    await new Promise((res,rej)=>{const s=document.createElement("script");s.src=CLOUD_CFG.lib;s.onload=res;s.onerror=()=>rej(new Error("lib"));document.head.appendChild(s)});
+    if(!window.supabase)throw new Error("lib");return window.supabase},
+  async getClient(){if(!this.client){const lib=await this.lib();this.client=lib.createClient(CLOUD_CFG.url,CLOUD_CFG.key,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"kyo-cloud-auth"}})}return this.client},
+  loadCache(){try{const c=JSON.parse(localStorage.getItem("kyo-cloud-cache")||"null");
+      if(c){S.students=c.students||[];S.lessons=c.lessons||[];S.attendance=c.attendance||[];S.competitions=c.competitions||[];S.settings=c.settings||{};
+        this.dojo=c.dojo||null;this.role=c.role||null;this.dojoName=c.dojoName||"";this.email=c.email||""}
+      this.queue=JSON.parse(localStorage.getItem("kyo-cloud-queue")||"[]")}catch(e){}},
+  saveCache(){try{localStorage.setItem("kyo-cloud-cache",JSON.stringify({students:S.students,lessons:S.lessons,attendance:S.attendance,competitions:S.competitions,settings:S.settings,
+      dojo:this.dojo,role:this.role,dojoName:this.dojoName,email:this.email}));localStorage.setItem("kyo-cloud-queue",JSON.stringify(this.queue))}catch(e){}},
+  async start(){
+    Store.mode="cloud";this.loadCache();S.loaded=true;renderMode();render();
+    try{const cl=await this.getClient();const {data:{session}}=await cl.auth.getSession();
+      if(!session){this.session=false;this.status="uitgelogd";renderMode();render();return}
+      this.session=true;this.email=session.user.email||this.email;
+      await this.membership();
+      if(!this.dojo){this.status="geen toegang";renderMode();render();return}
+      await this.flush(true);await this.fetchAll();this.subscribe();
+    }catch(e){this.status="offline";console.warn(e)}
+    renderMode();render();
+    window.addEventListener("online",()=>this.flush());setInterval(()=>{if(this.queue.length)this.flush()},30000);
+  },
+  async membership(){const {data,error}=await this.client.from("members").select("dojo_id,role,email,name").order("email");if(error)throw error;
+    const me=(data||[]).find(m=>(m.email||"").toLowerCase()===(this.email||"").toLowerCase());
+    if(!me){this.dojo=null;this.role=null;this.members=[];return}
+    this.dojo=me.dojo_id;this.role=me.role;this.members=(data||[]).filter(m=>m.dojo_id===this.dojo);
+    const d=await this.client.from("dojos").select("name").eq("id",this.dojo).maybeSingle();this.dojoName=d.data?.name||""},
+  async fetchAll(){
+    const rows=[];for(let from=0;;from+=1000){const {data,error}=await this.client.from("docs").select("coll,id,data,deleted").eq("dojo_id",this.dojo).range(from,from+999);
+      if(error)throw error;rows.push(...data);if(data.length<1000)break}
+    const out={students:[],lessons:[],attendance:[],competitions:[]};const priv={};let settings=null;
+    for(const r of rows){if(r.deleted)continue;if(r.coll==="student_private")priv[r.id]=r.data;else if(r.coll==="settings"){if(r.id==="main")settings=r.data}else if(out[r.coll])out[r.coll].push({...r.data,id:r.id})}
+    out.students=out.students.map(s=>({...s,...(priv[s.id]||{})}));
+    Object.assign(S,out);S.settings=settings||{};
+    if(S.draft&&!S.dirty){const f=S.lessons.find(l=>l.id===S.draft.id);if(f)S.draft=clone(f)}
+    if(S.cdraft&&!S.cdirty){const f=S.competitions.find(c=>c.id===S.cdraft.id);if(f)S.cdraft=clone(f)}
+    this.status="online";this.saveCache();requestRender()},
+  applyRow(r){
+    if(!r||!r.coll||this.queue.some(q=>q.coll===r.coll&&q.id===r.id))return;
+    const c=r.coll;
+    if(c==="settings"){if(r.id==="main"&&!r.deleted)S.settings=r.data||{}}
+    else if(c==="student_private"){const s=S.students.find(x=>x.id===r.id);if(s&&!r.deleted)Object.assign(s,r.data||{})}
+    else if(Array.isArray(S[c])){const a=S[c];const i=a.findIndex(x=>x.id===r.id);
+      if(r.deleted){if(i>=0)a.splice(i,1)}
+      else{const v={...(r.data||{}),id:r.id};if(c==="students"&&i>=0)PRIV_FIELDS.forEach(k=>{if(a[i][k]!==undefined&&v[k]===undefined)v[k]=a[i][k]});if(i>=0)a[i]=v;else a.push(v)}
+      if(c==="lessons"&&S.draft&&!S.dirty&&S.draft.id===r.id&&!r.deleted)S.draft=clone(r.data?{...r.data,id:r.id}:S.draft);
+      if(c==="competitions"&&S.cdraft&&!S.cdirty&&S.cdraft.id===r.id&&!r.deleted)S.cdraft=clone({...r.data,id:r.id})}
+    this.saveCache();requestRender()},
+  subscribe(){if(this.channel||!this.dojo)return;
+    this.channel=this.client.channel("docs-"+this.dojo)
+      .on("postgres_changes",{event:"*",schema:"public",table:"docs",filter:"dojo_id=eq."+this.dojo},p=>{if(p.new&&p.new.coll)this.applyRow(p.new)})
+      .subscribe(st=>{this.live=st==="SUBSCRIBED";renderMode()})},
+  write(c,id,data,deleted=false){
+    const d=clone(data||{});delete d.id;const rows=[];
+    if(c==="students"){const pub={},pr={};Object.keys(d).forEach(k=>{(PRIV_FIELDS.includes(k)?pr:pub)[k]=d[k]});
+      rows.push({coll:"students",id,data:pub,deleted});if(this.role!=="trainer")rows.push({coll:"student_private",id,data:pr,deleted})}
+    else rows.push({coll:c,id,data:d,deleted});
+    for(const r of rows){this.queue=this.queue.filter(q=>!(q.coll===r.coll&&q.id===r.id));this.queue.push(r)}
+    this.saveCache();renderMode();clearTimeout(this._ft);this._ft=setTimeout(()=>this.flush(),400)},
+  async flush(quiet){
+    if(this._busy||!this.client||!this.dojo||!this.queue.length)return;this._busy=true;
+    try{const batch=this.queue.slice(0,200);
+      const {error}=await this.client.from("docs").upsert(batch.map(r=>({dojo_id:this.dojo,coll:r.coll,id:r.id,data:r.data,deleted:!!r.deleted})),{onConflict:"dojo_id,coll,id"});
+      if(error){if(error.code==="42501"||/row-level security|permission/i.test(error.message||"")){this.queue=this.queue.filter(q=>!batch.includes(q));
+          if(!quiet)toast("Deze wijziging mag je met jouw rol niet opslaan. De app zet de online stand terug.");this.saveCache();this._busy=false;await this.fetchAll().catch(()=>{});return}
+        throw error}
+      this.queue=this.queue.filter(q=>!batch.includes(q));this.status="online";
+    }catch(e){this.status="offline";console.warn(e)}
+    finally{this._busy=false;this.saveCache();renderMode();if(this.queue.length&&this.status==="online")setTimeout(()=>this.flush(),300)}},
+  async sendCode(email){const cl=await this.getClient();const {error}=await cl.auth.signInWithOtp({email,options:{shouldCreateUser:true}});if(error)throw error},
+  async verify(email,code){const cl=await this.getClient();const {data,error}=await cl.auth.verifyOtp({email,token:code,type:"email"});if(error)throw error;
+    this.email=data.user?.email||email;this.session=true;await this.membership();return !!this.dojo},
+  async logout(){try{await this.client?.auth.signOut()}catch(e){}
+    ["kyo-cloud","kyo-cloud-cache","kyo-cloud-queue"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()},
+  // Beheerder: lokale gegevens van dit apparaat in een lege online database zetten
+  async uploadLocal(){const raw=JSON.parse(localStorage.getItem(LKEY)||"{}");
+    for(const c of ["students","lessons","attendance","competitions"]){S[c]=clone(raw[c]||[]);for(const x of S[c])this.write(c,x.id,x)}
+    S.settings=clone(raw.settings||{});this.write("settings","main",S.settings);
+    for(let i=0;i<60&&this.queue.length;i++){await this.flush();if(this.status!=="online")break;await new Promise(r=>setTimeout(r,200))}
+    return this.queue.length===0},
+  async addMember(email,role,name){const {error}=await this.client.from("members").insert({dojo_id:this.dojo,email:email.trim().toLowerCase(),role,name:name||null});if(error)throw error;await this.membership()},
+  async setRole(email,role){const {error}=await this.client.from("members").update({role}).eq("dojo_id",this.dojo).eq("email",email);if(error)throw error;await this.membership()},
+  async removeMember(email){const {error}=await this.client.from("members").delete().eq("dojo_id",this.dojo).eq("email",email);if(error)throw error;await this.membership()}
 };
 function deepMerge(t,s){for(const k in s){if(s[k]&&typeof s[k]==="object"&&!Array.isArray(s[k])){t[k]=t[k]&&typeof t[k]==="object"?t[k]:{};deepMerge(t[k],s[k])}else t[k]=s[k]}}
 async function guard(fn){
@@ -643,6 +742,10 @@ function renderMode(){
   const m=$("#mode");
   if(Store.mode==="db")m.innerHTML=`<span class="dot ok"></span>${S.readOnly?"Alleen lezen":"Gedeeld opgeslagen"}`;
   else if(Store.mode==="local")m.innerHTML=`<span class="dot ok"></span>Opgeslagen op deze computer`;
+  else if(Store.mode==="cloud"){const q=Cloud.queue.length;
+    m.innerHTML=!Cloud.session?`<span class="dot local"></span>Online: niet ingelogd`:!Cloud.dojo?`<span class="dot local"></span>Online: geen toegang`
+      :Cloud.status==="offline"?`<span class="dot local"></span>Offline${q?` · ${q} wijziging${q===1?"":"en"} wachten`:""}`
+      :`<span class="dot ok"></span>Online · ${h(Cloud.dojoName||"")}${q?` · bezig met opslaan`:Cloud.live?" · live":""}`}
 }
 let toastT;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,3800)}
 
@@ -1486,10 +1589,55 @@ function vSync(){
       <div class="row"><button class="btn primary" data-act="syncApply" ${p.plan.put.length+p.plan.del.length||p.plan.settings?"":"disabled"}>${p.plan.put.length+p.plan.del.length||p.plan.settings?"Samenvoegen":"Niets te doen: alles is al gelijk"}</button><button class="btn" data-act="syncCancel">Annuleren</button></div></div>`:""}
   </div>`}
 
+/* ---------- Online samenwerken (instellingen) ---------- */
+function vCloud(){
+  if(Store.mode==="db")return "";
+  const isCloud=Store.mode==="cloud";const L=S.login||{};
+  const loginForm=`<div class="stack" style="gap:8px">
+      ${!L.sent?`<div class="row" style="flex-wrap:nowrap"><input type="email" id="cl-email" value="${h(L.email||"")}" placeholder="je e-mailadres" autocomplete="email" style="flex:1"><button class="btn primary" data-act="clSend" ${L.busy?"disabled":""}>${L.busy?"Versturen…":"Stuur inlogcode"}</button></div>`
+      :`<span class="small">We hebben een code gestuurd naar <b>${h(L.email)}</b>. Kijk ook in je spam.</span>
+        <div class="row" style="flex-wrap:nowrap"><input type="text" id="cl-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="code uit de mail" style="flex:1;letter-spacing:.2em"><button class="btn primary" data-act="clVerify" ${L.busy?"disabled":""}>${L.busy?"Controleren…":"Inloggen"}</button></div>
+        <div><button class="btn sm ghost" data-act="clReset">Ander e-mailadres</button></div>`}
+      ${L.err?`<span class="small" style="color:var(--kiai)">${h(L.err)}</span>`:""}</div>`;
+  if(!isCloud||!Cloud.session)return `<div class="panel stack">
+    <h2>Online samenwerken</h2>
+    <p class="small muted" style="margin:0">Werk met je leraar en andere trainers in één gedeelde, beveiligde database. Wijzigingen zijn direct op alle apparaten zichtbaar en sync-bestanden zijn dan niet meer nodig. Alleen wie door de beheerder is uitgenodigd, kan inloggen en de gegevens zien.</p>
+    ${loginForm}
+    ${isCloud?`<div><button class="btn sm" data-act="clLogout">Stoppen en terug naar gegevens op dit apparaat</button></div>`:""}</div>`;
+  if(!Cloud.dojo)return `<div class="panel stack"><h2>Online samenwerken</h2>
+    <p class="small" style="margin:0">Je bent ingelogd als <b>${h(Cloud.email)}</b>, maar dit adres heeft (nog) geen toegang tot een dojo. Vraag de beheerder om je uit te nodigen met precies dit e-mailadres.</p>
+    <div><button class="btn" data-act="clLogout">Uitloggen</button></div></div>`;
+  const admin=Cloud.role==="admin";const q=Cloud.queue.length;
+  const localCount=(()=>{try{return (JSON.parse(localStorage.getItem(LKEY)||"{}").students||[]).length}catch(e){return 0}})();
+  return `<div class="panel stack">
+    <h2>Online samenwerken</h2>
+    <div class="checks">
+      <div class="check"><i class="ck ${Cloud.status==="offline"?"warn":"ok"}"></i><span class="cl">Status</span><span class="ct">${Cloud.status==="offline"?`offline${q?`, ${q} wijziging${q===1?"":"en"} wachten en gaan mee zodra er weer internet is`:""}`:`online${Cloud.live?", live bijwerken actief":""}${q?`, ${q} wijziging${q===1?"":"en"} worden opgeslagen`:""}`}</span></div>
+      <div class="check"><i class="ck ok"></i><span class="cl">Ingelogd als</span><span class="ct">${h(Cloud.email)} · ${ROLE_LABEL[Cloud.role]||Cloud.role} · ${h(Cloud.dojoName)}</span></div>
+    </div>
+    ${admin&&!S.students.length&&localCount?`<div class="subbox"><b>Gegevens van dit apparaat online zetten</b><span class="small">De online database is nog leeg. Op dit apparaat staan ${localCount} leerlingen met hun aanwezigheid, lessen, wedstrijden en instellingen. Zet ze in één keer online; daarna werken alle trainers met deze gegevens.</span>
+      <div><button class="btn ${S.confirm==="cl-up"?"danger armed":"primary"}" data-act="clUpload">${S.confirm==="cl-up"?"Klik nogmaals: online zetten":"Online zetten"}</button></div></div>`:""}
+    ${admin?`<h3 style="margin-top:6px">Trainers en rechten</h3>
+      <div class="tablewrap"><table><thead><tr><th>E-mailadres</th><th>Naam</th><th>Rol</th><th></th></tr></thead><tbody>
+      ${Cloud.members.map(m=>{const me=m.email.toLowerCase()===Cloud.email.toLowerCase();const armed=S.confirm==="cl-rm-"+m.email;return `<tr><td class="small">${h(m.email)}${me?" (jij)":""}</td><td class="small">${h(m.name||"")}</td>
+        <td>${me?ROLE_LABEL[m.role]:`<select data-ch="clRole" data-email="${h(m.email)}" aria-label="Rol">${Object.entries(ROLE_LABEL).map(([k,v])=>`<option value="${k}"${m.role===k?" selected":""}>${v}</option>`).join("")}</select>`}</td>
+        <td>${me?"":`<button class="btn sm danger ${armed?"armed":""}" data-act="clRemove" data-email="${h(m.email)}">${armed?"Zeker?":"Verwijderen"}</button>`}</td></tr>`}).join("")}
+      </tbody></table></div>
+      <form class="row" data-form="clAdd" style="align-items:flex-end">
+        <label class="field" style="flex:2;min-width:180px"><span class="label">E-mailadres</span><input type="email" id="cl-new-email" required autocomplete="off"></label>
+        <label class="field" style="flex:1;min-width:120px"><span class="label">Naam</span><input type="text" id="cl-new-name" autocomplete="off"></label>
+        <label class="field"><span class="label">Rol</span><select id="cl-new-role"><option value="hoofdtrainer">hoofdtrainer</option><option value="trainer">trainer</option><option value="admin">beheerder</option></select></label>
+        <button class="btn primary" type="submit">Uitnodigen</button></form>
+      <p class="small muted" style="margin:0"><b>Beheerder:</b> alles, ook instellingen en trainers. <b>Hoofdtrainer:</b> alles van leerlingen, aanwezigheid, examens en wedstrijden. <b>Trainer:</b> aanwezigheid en lessen; ziet geen geboortedatums, geboorteplaatsen, lidnummers en notities. Een uitgenodigde trainer opent de app, kiest Instellingen → Online samenwerken en logt in met zijn e-mailadres.</p>`
+    :`<p class="small muted" style="margin:0">${Cloud.role==="trainer"?"Als trainer kun je aanwezigheid en lessen bijwerken. Privégegevens van leerlingen zijn voor jou niet zichtbaar.":"Instellingen en trainers worden beheerd door de beheerder."}</p>`}
+    <div><button class="btn" data-act="clLogout">Uitloggen</button></div>
+  </div>`}
+
 /* ---------- Instellingen ---------- */
 function vSettings(){
   const gs=groupsCfg();const custom=Array.isArray(S.settings.groups)&&S.settings.groups.length;
   return `<div class="stack" style="max-width:760px">
+  ${vCloud()}
   <div class="panel stack">
     <h2>Dojo</h2>
     <label class="field"><span class="label">Dojo</span><select id="set-dojo" data-ch="dojoSel"><option value="">Kies een dojo…</option>${DOJOS.map(d=>`<option value="${d.id}"${dojoKey()===d.id?" selected":""}>${h(d.n)}${d.p?" · "+h(d.p):""}</option>`).join("")}<option value="other"${dojoKey()==="other"?" selected":""}>Andere dojo…</option></select></label>
@@ -1530,10 +1678,10 @@ function vSettings(){
     <div class="fields3"><label class="field"><span class="label">Tellen vanaf (optioneel)</span><input type="date" id="set-from" value="${h(S.settings.attFrom||"")}" data-ch="setting" data-f="attFrom"></label></div>
     <span class="small muted">Vul per blok vrij een percentage van en tot en met in (0–100). Deze indeling geldt overal in de app: bij leerlingen, aanwezigheid, het rapport en de examentoelating. "Voldoet niet" betekent "nog niet toegelaten" voor het examen; "bespreken" geeft een oranje waarschuwing. Zonder datum bij "Tellen vanaf" telt de app per leerling vanaf het vorige examen; met een datum vanaf de laatste van de twee.</span>
   </div>
-  ${vSync()}
+  ${Store.mode==="cloud"?"":vSync()}
   <div class="panel stack">
     <h2>Gegevens en back-up</h2>
-    <p class="small muted" style="margin:0">${Store.mode==="db"?"Alle gegevens worden gedeeld opgeslagen bij deze app op claude.ai. Iedereen met bewerkrechten werkt met dezelfde gegevens.":"Alle gegevens staan alleen in deze browser op deze computer. Ze gaan nergens heen. Let op: wis je je browsergegevens of gebruik je een andere browser of computer, dan zie je ze niet. Maak daarom regelmatig een back-up en bewaar die op een veilige plek."}</p>
+    <p class="small muted" style="margin:0">${Store.mode==="db"?"Alle gegevens worden gedeeld opgeslagen bij deze app op claude.ai. Iedereen met bewerkrechten werkt met dezelfde gegevens.":Store.mode==="cloud"?"Je werkt online: de gegevens staan in de gedeelde database van de dojo. Een back-up downloaden kan nog steeds, bijvoorbeeld als extra zekerheid.":"Alle gegevens staan alleen in deze browser op deze computer. Ze gaan nergens heen. Let op: wis je je browsergegevens of gebruik je een andere browser of computer, dan zie je ze niet. Maak daarom regelmatig een back-up en bewaar die op een veilige plek."}</p>
     <div class="row"><button class="btn" data-act="backupExport">Back-up downloaden</button>
       ${Store.mode==="local"?`<label class="btn" for="bk-file">Back-up terugzetten</label><input type="file" id="bk-file" accept=".json,application/json" data-ch="backupImport" hidden>`:""}</div>
     ${S.pendingImport?`<div class="subbox"><b>Back-up terugzetten?</b><span class="small">Back-up${S.pendingImport.dojo?" van "+h(S.pendingImport.dojo):""}${S.pendingImport.exportedAt?" gemaakt op "+fmtY(S.pendingImport.exportedAt.slice(0,10)):""}: ${S.pendingImport.students.length} leerlingen, ${(S.pendingImport.lessons||[]).length} lessen, ${(S.pendingImport.attendance||[]).length} aanwezigheidsregistraties. Alle huidige gegevens in deze browser worden vervangen.</span>
@@ -1585,6 +1733,22 @@ function setProg(sid,item,v){
 const ACT={
   tab:el=>{S.tab=el.dataset.v;S.confirm=null;S.moreOpen=false;try{localStorage.setItem("kyo-tab",S.tab)}catch(e){}render();window.scrollTo({top:0})},
   moreToggle:()=>{S.moreOpen=!S.moreOpen;render()},
+  clSend:async()=>{const email=($("#cl-email")?.value||"").trim();if(!/^\S+@\S+\.\S+$/.test(email)){S.login={email,err:"Vul een geldig e-mailadres in."};render();return}
+    S.login={email,busy:true};render();
+    try{await Cloud.sendCode(email);S.login={email,sent:true}}catch(e){console.warn(e);S.login={email,err:e&&e.message==="lib"?"Geen verbinding met de online database. Controleer je internet.":"De code kon niet worden verstuurd. Probeer het over een minuut opnieuw."}}
+    render()},
+  clVerify:async()=>{const L=S.login||{};const code=($("#cl-code")?.value||"").replace(/\s/g,"");if(!code){S.login={...L,err:"Vul de code uit de mail in."};render();return}
+    S.login={...L,busy:true,err:""};render();
+    try{const ok=await Cloud.verify(L.email,code);
+      if(ok){try{localStorage.setItem("kyo-cloud","1")}catch(e){}toast("Ingelogd. De online gegevens worden geladen…");setTimeout(()=>location.reload(),600)}
+      else{S.login={...L,busy:false,err:"Ingelogd, maar dit e-mailadres heeft geen toegang. Vraag de beheerder om je uit te nodigen."};render()}}
+    catch(e){console.warn(e);S.login={...L,busy:false,err:"Deze code klopt niet of is verlopen. Vraag een nieuwe code aan."};render()}},
+  clReset:()=>{S.login={};render()},
+  clLogout:()=>Cloud.logout(),
+  clUpload:async()=>{if(S.confirm!=="cl-up"){S.confirm="cl-up";render();return}S.confirm=null;toast("Gegevens worden online gezet…");
+    const ok=await Cloud.uploadLocal();render();toast(ok?"Alle gegevens staan online.":"Nog niet alles is online gezet; de rest gaat mee zodra er verbinding is.")},
+  clRemove:async el=>{const k="cl-rm-"+el.dataset.email;if(S.confirm!==k){S.confirm=k;render();return}S.confirm=null;
+    try{await Cloud.removeMember(el.dataset.email);toast("Toegang ingetrokken.")}catch(e){toast("Verwijderen is niet gelukt.")}render()},
   sview:el=>{S.studentView=el.dataset.v;render()},
   selStudent:el=>{const changed=(el.dataset.id||null)!==S.selStudent;S.selStudent=el.dataset.id||null;S.progGrade=null;S.confirm=null;render();
     if(changed)window.scrollTo({top:0,behavior:"instant"})},
@@ -1715,6 +1879,7 @@ const CH={
     Object.assign(s,p);if(el.type!=="checkbox")el.classList.toggle("empty",!v);Store.patch("students",s.id,p)},
   passSel:el=>{const s=new Set(S.passSel||[]);if(el.checked)s.add(el.dataset.id);else s.delete(el.dataset.id);S.passSel=[...s];S.confirm=null;render()},
   resDate:el=>{S.resultDate=el.value},
+  clRole:async el=>{try{await Cloud.setRole(el.dataset.email,el.value);toast("Rol aangepast.")}catch(e){toast("Aanpassen is niet gelukt.")}render()},
   compC:el=>{if(!S.cdraft)return;S.cdraft[el.dataset.f]=el.value;touchComp()},
   dojoSel:el=>{Store.settings({dojoId:el.value})},
   devName:el=>{try{localStorage.setItem("kyo-device",el.value.trim())}catch(e){}},
@@ -1727,7 +1892,7 @@ const CH={
   logoUpload:async el=>{
     const f=el.files&&el.files[0];if(!f)return;const key=dojoKey();
     if(!key)return toast("Kies eerst een dojo.");
-    if(!S.assets&&Store.mode==="local"){ // losse versie: logo verkleind als afbeelding in de instellingen bewaren
+    if(!S.assets&&(Store.mode==="local"||Store.mode==="cloud")){ // losse versie: logo verkleind als afbeelding in de instellingen bewaren
       const url=URL.createObjectURL(f);const im=new Image();
       im.onload=async()=>{try{const sc=Math.min(1,400/Math.max(im.naturalWidth,im.naturalHeight));const c=document.createElement("canvas");c.width=Math.round(im.naturalWidth*sc)||400;c.height=Math.round(im.naturalHeight*sc)||400;
         c.getContext("2d").drawImage(im,0,0,c.width,c.height);await Store.settings({dojoLogoData:{...(S.settings.dojoLogoData||{}),[key]:c.toDataURL("image/png")}});toast("Logo opgeslagen.")}
@@ -1762,6 +1927,9 @@ const CH={
 const FORM={
   addStudent:()=>{const n=$("#ns-name").value.trim();const ln=($("#ns-last")?.value||"").trim();if(!n)return;if(S.readOnly)return toast("Je kunt deze planner alleen bekijken.");const id=uid();
     Store.put("students",id,{name:(n+" "+ln).trim(),firstName:n,lastName:ln,current:$("#ns-grade").value,lastExam:"",birthYear:"",notes:"",progress:{},createdAt:Date.now()});S.selStudent=id;S.progGrade=null;render();const f=$("#ns-name");if(f)f.value=""},
+  clAdd:async()=>{const email=($("#cl-new-email")?.value||"").trim();if(!/^\S+@\S+\.\S+$/.test(email))return toast("Vul een geldig e-mailadres in.");
+    try{await Cloud.addMember(email,$("#cl-new-role").value,($("#cl-new-name")?.value||"").trim());toast(`${email} is uitgenodigd. Laat hem inloggen via Instellingen → Online samenwerken.`)}
+    catch(e){toast(/duplicate/i.test(e?.message||"")?"Dit e-mailadres staat er al.":"Uitnodigen is niet gelukt.")}render()},
   addComp:()=>{const n=$("#nc-name").value.trim();if(!n)return;if(S.readOnly)return toast("Je kunt deze planner alleen bekijken.");
     const id=uid();const data={name:n,date:$("#nc-date").value||"",location:$("#nc-loc").value.trim(),entries:[],locked:false,exports:[],createdAt:Date.now(),updatedAt:Date.now()};
     Store.put("competitions",id,data);S.selComp=id;S.cdraft={...clone(data),id};S.cdirty=false;S.compQ="";render();window.scrollTo({top:0})},
