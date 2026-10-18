@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.4.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.5.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -259,7 +259,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.4.0",date:"2026-10-18",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.5.0",date:"2026-10-18",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -639,7 +639,34 @@ const Store={db:null,mode:"loading",
    - Wijzigingen gaan via een wachtrij: zonder internet blijven ze bewaard en gaan ze later alsnog mee.
    - Live: wijzigingen van anderen komen direct binnen (realtime). */
 const CLOUD_CFG={url:"https://frjqyvwdohovuaainydx.supabase.co",key:"sb_publishable_PecWKdpVo9I8NsoFFwt7ug_otcJLGCM",
-  lib:"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"};
+  lib:"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js",
+  appUrl:"https://dojokitaoranda.github.io/DojoAssistant/"};
+// Webadres van de app voor uitnodigingen: het adres waar de app nu draait (https), anders het vaste adres
+function appUrl(){return /^https:$/.test(location.protocol)?location.origin+location.pathname.replace(/index\.html$/,""):CLOUD_CFG.appUrl}
+// Uitnodigingstekst voor een trainer (onderwerp + tekst)
+function inviteMsg(m){
+  const me=Cloud.members.find(x=>x.email.toLowerCase()===Cloud.email.toLowerCase());
+  const from=(me&&me.name)||"de beheerder";const first=(m.name||"").trim().split(/\s+/)[0];
+  const rol={admin:"Je bent beheerder: je kunt alles, ook instellingen en trainers.",
+    hoofdtrainer:"Je bent hoofdtrainer: je kunt leerlingen, aanwezigheid, lessen, examens en wedstrijden bijwerken.",
+    trainer:"Je bent trainer: je kunt aanwezigheid en lessen bijwerken."}[m.role]||"";
+  const dojo=Cloud.dojoName?"Dojo "+Cloud.dojoName:"de dojo";
+  return {subject:`Uitnodiging Dojo Assistant – ${dojo}`,text:
+`Hoi${first?" "+first:""},
+
+Je hebt toegang gekregen tot Dojo Assistant van ${dojo}. ${rol}
+
+1. Open de app: ${appUrl()}
+   iPhone: open de link in Safari → deelknop → "Zet op beginscherm".
+   Android: open de link in Chrome → menu (drie puntjes) → "App installeren".
+2. Open de app → Instellingen → Online samenwerken.
+3. Vul dit e-mailadres in: ${m.email} → "Stuur inlogcode".
+4. Vul de code uit de mail in (kijk ook in je spam) → "Inloggen".
+
+Gebruik precies dit e-mailadres, anders krijg je geen toegang.
+
+Osu!
+${from==="de beheerder"?"":from}`.trim()}}
 const PRIV_FIELDS=["birthDate","birthYear","birthPlace","ifkNumber","nkaNumber","notes"];
 const ROLE_LABEL={admin:"beheerder",hoofdtrainer:"hoofdtrainer",trainer:"trainer"};
 const Cloud={client:null,dojo:null,dojoName:"",role:null,email:"",queue:[],status:"",live:false,members:[],session:false,
@@ -1621,8 +1648,18 @@ function vCloud(){
       <div class="tablewrap"><table><thead><tr><th>E-mailadres</th><th>Naam</th><th>Rol</th><th></th></tr></thead><tbody>
       ${Cloud.members.map(m=>{const me=m.email.toLowerCase()===Cloud.email.toLowerCase();const armed=S.confirm==="cl-rm-"+m.email;return `<tr><td class="small">${h(m.email)}${me?" (jij)":""}</td><td class="small">${h(m.name||"")}</td>
         <td>${me?ROLE_LABEL[m.role]:`<select data-ch="clRole" data-email="${h(m.email)}" aria-label="Rol">${Object.entries(ROLE_LABEL).map(([k,v])=>`<option value="${k}"${m.role===k?" selected":""}>${v}</option>`).join("")}</select>`}</td>
-        <td>${me?"":`<button class="btn sm danger ${armed?"armed":""}" data-act="clRemove" data-email="${h(m.email)}">${armed?"Zeker?":"Verwijderen"}</button>`}</td></tr>`}).join("")}
+        <td style="white-space:nowrap">${me?"":`<button class="btn sm ${S.invite===m.email?"primary":""}" data-act="clInvite" data-email="${h(m.email)}">Uitnodiging sturen</button> <button class="btn sm danger ${armed?"armed":""}" data-act="clRemove" data-email="${h(m.email)}">${armed?"Zeker?":"Verwijderen"}</button>`}</td></tr>`}).join("")}
       </tbody></table></div>
+      ${(()=>{const m=S.invite&&Cloud.members.find(x=>x.email===S.invite);if(!m)return "";const msg=inviteMsg(m);
+        return `<div class="subbox"><b>Uitnodiging voor ${h(m.name||m.email)}</b>
+          <span class="small">Kies hoe je het bericht verstuurt. Je mail- of WhatsApp-app opent met de tekst al ingevuld; je verstuurt het zelf.</span>
+          <textarea readonly rows="12" style="width:100%;font-size:12px">${h(msg.text)}</textarea>
+          <div class="row">
+            ${navigator.share?`<button class="btn primary" data-act="clInvShare">Delen…</button>`:""}
+            <a class="btn ${navigator.share?"":"primary"}" href="mailto:${h(m.email)}?subject=${encodeURIComponent(msg.subject)}&body=${encodeURIComponent(msg.text)}">Mail</a>
+            <a class="btn" href="https://wa.me/?text=${encodeURIComponent(msg.text)}" target="_blank" rel="noopener">WhatsApp</a>
+            <button class="btn" data-act="clInvCopy">Tekst kopiëren</button>
+            <button class="btn ghost" data-act="clInvClose">Sluiten</button></div></div>`})()}
       <form class="row" data-form="clAdd" style="align-items:flex-end">
         <label class="field" style="flex:2;min-width:180px"><span class="label">E-mailadres</span><input type="email" id="cl-new-email" required autocomplete="off"></label>
         <label class="field" style="flex:1;min-width:120px"><span class="label">Naam</span><input type="text" id="cl-new-name" autocomplete="off"></label>
@@ -1748,7 +1785,14 @@ const ACT={
   clUpload:async()=>{if(S.confirm!=="cl-up"){S.confirm="cl-up";render();return}S.confirm=null;toast("Gegevens worden online gezet…");
     const ok=await Cloud.uploadLocal();render();toast(ok?"Alle gegevens staan online.":"Nog niet alles is online gezet; de rest gaat mee zodra er verbinding is.")},
   clRemove:async el=>{const k="cl-rm-"+el.dataset.email;if(S.confirm!==k){S.confirm=k;render();return}S.confirm=null;
-    try{await Cloud.removeMember(el.dataset.email);toast("Toegang ingetrokken.")}catch(e){toast("Verwijderen is niet gelukt.")}render()},
+    try{await Cloud.removeMember(el.dataset.email);if(S.invite===el.dataset.email)S.invite=null;toast("Toegang ingetrokken.")}catch(e){toast("Verwijderen is niet gelukt.")}render()},
+  clInvite:el=>{S.invite=S.invite===el.dataset.email?null:el.dataset.email;render()},
+  clInvClose:()=>{S.invite=null;render()},
+  clInvShare:async()=>{const m=Cloud.members.find(x=>x.email===S.invite);if(!m)return;const msg=inviteMsg(m);
+    try{await navigator.share({title:msg.subject,text:msg.text})}catch(e){}},
+  clInvCopy:async()=>{const m=Cloud.members.find(x=>x.email===S.invite);if(!m)return;
+    try{await navigator.clipboard.writeText(inviteMsg(m).text);toast("Tekst gekopieerd. Plak hem in een bericht aan de trainer.")}
+    catch(e){toast("Kopiëren lukt hier niet; selecteer de tekst en kopieer hem zelf.")}},
   sview:el=>{S.studentView=el.dataset.v;render()},
   selStudent:el=>{const changed=(el.dataset.id||null)!==S.selStudent;S.selStudent=el.dataset.id||null;S.progGrade=null;S.confirm=null;render();
     if(changed)window.scrollTo({top:0,behavior:"instant"})},
@@ -1928,7 +1972,7 @@ const FORM={
   addStudent:()=>{const n=$("#ns-name").value.trim();const ln=($("#ns-last")?.value||"").trim();if(!n)return;if(S.readOnly)return toast("Je kunt deze planner alleen bekijken.");const id=uid();
     Store.put("students",id,{name:(n+" "+ln).trim(),firstName:n,lastName:ln,current:$("#ns-grade").value,lastExam:"",birthYear:"",notes:"",progress:{},createdAt:Date.now()});S.selStudent=id;S.progGrade=null;render();const f=$("#ns-name");if(f)f.value=""},
   clAdd:async()=>{const email=($("#cl-new-email")?.value||"").trim();if(!/^\S+@\S+\.\S+$/.test(email))return toast("Vul een geldig e-mailadres in.");
-    try{await Cloud.addMember(email,$("#cl-new-role").value,($("#cl-new-name")?.value||"").trim());toast(`${email} is uitgenodigd. Laat hem inloggen via Instellingen → Online samenwerken.`)}
+    try{await Cloud.addMember(email,$("#cl-new-role").value,($("#cl-new-name")?.value||"").trim());S.invite=email.toLowerCase();toast(`${email} heeft nu toegang. Stuur hieronder de uitnodiging.`)}
     catch(e){toast(/duplicate/i.test(e?.message||"")?"Dit e-mailadres staat er al.":"Uitnodigen is niet gelukt.")}render()},
   addComp:()=>{const n=$("#nc-name").value.trim();if(!n)return;if(S.readOnly)return toast("Je kunt deze planner alleen bekijken.");
     const id=uid();const data={name:n,date:$("#nc-date").value||"",location:$("#nc-loc").value.trim(),entries:[],locked:false,exports:[],createdAt:Date.now(),updatedAt:Date.now()};
