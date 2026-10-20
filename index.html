@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.3"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,7 +277,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.8.1",date:"2026-10-20",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.8.3",date:"2026-10-20",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -541,8 +541,9 @@ function attStats(s){
   if(from){const y=iso(new Date(Date.now()-864e5));if(from<=y)trainingDatesBetween(from,y).forEach(d=>groupsOnDay(wd(d)).forEach(g=>{if(gs.includes(g.id)&&!ids.has(attId(d,g.id))){open++;openList.push({d,g})}}))}
   return {from,total:sess.length,present,open,openList,pct:sess.length?present/sess.length:null,last:sess.slice(-10).map(a=>!!a.present?.[s.id])};
 }
-let _attIds=null,_attSrc=null;
-function attIdSet(){if(_attSrc!==S.attendance){_attSrc=S.attendance;_attIds=new Set(S.attendance.map(a=>a.id))}return _attIds}
+// Cache van registratie-id's; ook vernieuwen als er in dezelfde lijst iets bij komt of af gaat (push/splice)
+let _attIds=null,_attSrc=null,_attLen=-1;
+function attIdSet(){if(_attSrc!==S.attendance||_attLen!==S.attendance.length){_attSrc=S.attendance;_attLen=S.attendance.length;_attIds=new Set(S.attendance.map(a=>a.id))}return _attIds}
 /* Aanwezigheidsklassen (per dojo in te stellen): voldoet ≥ minAtt, bespreken ≥ talkAtt, anders voldoet niet.
    Zolang er open lessen zijn telt de beste mogelijke uitkomst (alle open lessen aanwezig). */
 /* Drie vrij in te stellen blokken (van–t/m, 0–100%). Bij overlap telt voldoet > bespreken > voldoet niet;
@@ -688,7 +689,9 @@ ${from==="de beheerder"?"":from}`.trim()}}
 const PRIV_FIELDS=["birthDate","birthYear","birthPlace","ifkNumber","nkaNumber","notes"];
 const ROLE_LABEL={admin:"beheerder",hoofdtrainer:"hoofdtrainer",trainer:"trainer"};
 const Cloud={client:null,dojo:null,dojoName:"",role:null,email:"",queue:[],status:"",live:false,members:[],session:false,
-  enabled(){try{return localStorage.getItem("kyo-cloud")==="1"}catch(e){return false}},
+  // De deelbare losse versie (window.DOJO_STANDALONE, gezet door build-standalone.js) heeft geen online samenwerken
+  available(){return !window.DOJO_STANDALONE},
+  enabled(){if(!this.available())return false;try{return localStorage.getItem("kyo-cloud")==="1"}catch(e){return false}},
   async lib(){if(window.supabase&&window.supabase.createClient)return window.supabase;
     await new Promise((res,rej)=>{const s=document.createElement("script");s.src=CLOUD_CFG.lib;s.onload=res;s.onerror=()=>rej(new Error("lib"));document.head.appendChild(s)});
     if(!window.supabase)throw new Error("lib");return window.supabase},
@@ -1648,7 +1651,7 @@ function vSync(){
 
 /* ---------- Online samenwerken (instellingen) ---------- */
 function vCloud(){
-  if(Store.mode==="db")return "";
+  if(Store.mode==="db"||!Cloud.available())return "";
   const isCloud=Store.mode==="cloud";const L=S.login||{};
   const loginForm=`<div class="stack" style="gap:8px">
       ${!L.sent?`<div class="row" style="flex-wrap:nowrap"><input type="email" id="cl-email" value="${h(L.email||"")}" placeholder="je e-mailadres" autocomplete="email" style="flex:1"><button class="btn primary" data-act="clSend" ${L.busy?"disabled":""}>${L.busy?"Versturen…":"Stuur inlogcode"}</button></div>
