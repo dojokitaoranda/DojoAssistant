@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.7.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -236,6 +236,21 @@ tr.cathead td{background:var(--bg);font-weight:700;font-size:.78rem;text-transfo
 .dots i.p{background:var(--s3)}.dots i.a{background:color-mix(in srgb,var(--kiai) 70%,transparent)}
 .daypick{display:flex;gap:4px;flex-wrap:wrap}
 .daypick .chip{min-width:44px;justify-content:center}
+#rtimer{position:fixed;inset:0;background:var(--bg);z-index:55;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);transition:background .3s}
+#rtimer.ph-work{background:color-mix(in srgb,var(--kiai) 16%,var(--bg))}
+#rtimer.ph-rest{background:color-mix(in srgb,var(--s3) 18%,var(--bg))}
+#rtimer.ph-prep{background:color-mix(in srgb,var(--accent) 12%,var(--bg))}
+.rt{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.rt .rt-ph{text-align:center;font-size:clamp(1.6rem,7vw,3rem);font-weight:800;letter-spacing:.04em}
+.rt .rt-ph .tj{display:block;font-size:.55em;font-weight:500;opacity:.75}
+.ph-work .rt-ph{color:var(--kiai)}.ph-rest .rt-ph{color:var(--s3)}.ph-prep .rt-ph{color:var(--accent)}
+.rt .rt-time{text-align:center;font-family:var(--f-mono);font-size:clamp(5rem,30vw,13rem);font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.rt .rt-round{text-align:center;font-size:1.25rem;font-weight:700}
+.rt .rt-bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}.rt .rt-bar>i{display:block;height:100%;background:currentColor}
+.ph-work .rt-bar{color:var(--kiai)}.ph-rest .rt-bar{color:var(--s3)}.ph-prep .rt-bar{color:var(--accent)}
+.rt .rt-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.rt .rt-btns .btn{min-height:52px;padding:0 22px;font-size:1.05rem}
+.rt .rt-dur{display:flex;gap:6px;align-items:center}.rt .rt-dur input{width:72px;text-align:center}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:var(--r);font-size:.9rem;z-index:60;max-width:calc(100% - 32px)}
 a{color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.bar>i{transition:width .3s}}
@@ -254,12 +269,13 @@ a{color:var(--accent)}
 </header>
 <main class="wrap" id="view"></main>
 <div id="dojo" hidden></div>
+<div id="rtimer" hidden></div>
 <footer class="wrap appfoot" id="appfoot"></footer>
 <div id="toast" hidden></div>
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.7.0",date:"2026-10-20",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.8.0",date:"2026-10-20",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -1106,6 +1122,7 @@ function vLessons(){
   const li=l=>`<button class="li" data-act="openLesson" data-id="${l.id}" aria-current="${l.id===S.selLesson}"><span class="grow"><span class="name">${h(l.title)}</span><span class="small muted">${fmt(l.date)}${l.group&&groupById(l.group)?" · "+h(groupById(l.group).name):""} · ${sumMin(l)} min</span></span><span class="row" style="gap:3px">${(l.grades||[]).map(g=>belt(g)).join("")}</span></button>`;
   return `<div class="grid2 ${sel?"has-sel":""}">
    <div class="listcol stack">
+    <div class="panel row between" style="gap:10px"><div><div class="label">Rondetimer</div><span class="small muted">Tabata, kumite-ronden of een eigen schema</span></div><button class="btn" data-act="rtOpen">Openen</button></div>
     <div class="panel stack" style="gap:10px">
       <div class="label">Nieuwe les</div>
       <div class="fields"><label class="field"><span class="label">Datum</span><input type="date" id="nl-date" value="${nl.date}" data-ch="nl" data-f="date"></label>
@@ -1757,7 +1774,7 @@ function renderDojo(){
   const l=S.draft;const d=S.dojo;if(!l||!d)return;const b=l.blocks[d.i];
   if(!b){$("#dojo").innerHTML=`<div class="dj"><div class="row between"><h2>${h(l.title)}</h2><button class="btn" data-act="closeDojo">Sluiten</button></div><div class="panel empty"><h3>Deze les heeft nog geen blokken</h3></div></div>`;return}
   $("#dojo").innerHTML=`<div class="dj">
-   <div class="row between"><div><div class="label">${fmt(l.date,{weekday:"long",day:"numeric",month:"long"})} · blok ${d.i+1} van ${l.blocks.length}</div><div class="small muted">${h(l.title)}</div></div><div class="row"><button class="btn" data-act="djAtt">Aanwezigheid</button><button class="btn" data-act="closeDojo">Sluiten</button></div></div>
+   <div class="row between"><div><div class="label">${fmt(l.date,{weekday:"long",day:"numeric",month:"long"})} · blok ${d.i+1} van ${l.blocks.length}</div><div class="small muted">${h(l.title)}</div></div><div class="row"><button class="btn" data-act="rtOpen">Rondetimer</button><button class="btn" data-act="djAtt">Aanwezigheid</button><button class="btn" data-act="closeDojo">Sluiten</button></div></div>
    <div class="steps">${l.blocks.map((x,i)=>`<i class="${i<d.i?"done":i===d.i?"cur":""}"></i>`).join("")}</div>
    <div class="row between" style="align-items:flex-end"><div><span class="btype" style="color:${BLOCK_COLOR[b.type]}">${BLOCK_TYPES[b.type]}</span><h2 style="margin-top:6px">${h(b.title)}</h2></div>
      <div style="text-align:right"><div class="timer ${d.left<0?"over":""}" id="dj-timer">${mmss(d.left)}</div>
@@ -1769,6 +1786,84 @@ function renderDojo(){
   </div>`;
 }
 function djTick(){const d=S.dojo;if(!d)return;d.left-=1;const t=$("#dj-timer");if(t){t.textContent=mmss(d.left);t.classList.toggle("over",d.left<0)}}
+
+/* ---------- Rondetimer (tabata, kumite-ronden, eigen schema) ---------- */
+// Fases: yōi (aftellen vooraf) → hajime (ronde) → yasume (pauze) → hajime … → yame (klaar).
+// De tijd loopt op de klok (Date.now), zodat pauzeren of een vergrendeld scherm de tijd niet verschuift.
+// Instellingen per apparaat in localStorage (gemak, geen gedeelde gegevens).
+const RT_KEY="kyo-rtimer";
+const RT_PRESETS=[["Tabata",{rounds:8,work:20,rest:10}],["Kumite 3 × 2 min",{rounds:3,work:120,rest:60}],["Conditie 6 × 1 min",{rounds:6,work:60,rest:30}]];
+const RT_PH={prep:["Klaar maken","用意 · yōi"],work:["Ronde","始め · hajime"],rest:["Pauze","休め · yasume"],done:["Klaar","止め · yame"]};
+let RT=null,rtInt=null,rtWake=null,rtAudio=null;
+function rtCfg(){const c={rounds:8,work:20,rest:10,prep:10};try{Object.assign(c,JSON.parse(localStorage.getItem(RT_KEY)||"{}"))}catch(e){}return c}
+const rtFmt=s=>Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+const rtSummary=c=>`${c.rounds} × ${rtFmt(c.work)} ronde${c.rest?` met ${rtFmt(c.rest)} pauze`:", zonder pauze"} · totaal ${rtFmt((c.prep||0)+c.rounds*c.work+(c.rounds-1)*c.rest)} min`;
+function openRT(){RT={cfg:rtCfg(),phase:"setup"};$("#rtimer").hidden=false;document.body.style.overflow="hidden";renderRT()}
+function closeRT(){clearInterval(rtInt);rtInt=null;RT=null;const el=$("#rtimer");el.hidden=true;el.className="";if(!S.dojo)document.body.style.overflow="";try{rtWake?.release()}catch(e){}rtWake=null}
+// Geluid via Web Audio (geen bestanden nodig). Wordt bij "Start" ontgrendeld (nodig op iPhone).
+function rtBeep(pattern){try{
+  const a=rtAudio||(rtAudio=new (window.AudioContext||window.webkitAudioContext)());if(a.state==="suspended")a.resume();
+  let t=a.currentTime+0.03;
+  for(const [f,ms] of pattern){const d=ms/1000,o=a.createOscillator(),g=a.createGain();o.type="square";o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.35,t+0.01);g.gain.setValueAtTime(0.35,t+Math.max(0.02,d-0.04));g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+0.02);t+=d+0.09}}catch(e){}}
+const RT_SND={work:[[880,750]],rest:[[620,260],[620,260]],done:[[880,280],[880,280],[1175,1000]],tick:[[1000,80]]};
+function rtReadCfg(){if(!$("#rt-rounds"))return RT.cfg;const n=(id,d)=>{const v=parseInt($(id)?.value,10);return isNaN(v)?d:Math.max(0,v)};const c=RT.cfg;
+  c.rounds=Math.min(99,Math.max(1,n("#rt-rounds",c.rounds)));
+  c.work=Math.max(1,n("#rt-wm",0)*60+Math.min(59,n("#rt-ws",0)));c.rest=n("#rt-rm",0)*60+Math.min(59,n("#rt-rs",0));
+  c.prep=n("#rt-prep",c.prep);return c}
+function rtStart(){const c=rtReadCfg();try{localStorage.setItem(RT_KEY,JSON.stringify(c))}catch(e){}
+  rtBeep([[1,1]]);// geluid ontgrendelen tijdens de klik
+  RT={cfg:c,phase:c.prep>0?"prep":"work",round:1,left:(c.prep>0?c.prep:c.work)*1000,running:true};
+  if(RT.phase==="work")rtBeep(RT_SND.work);
+  try{navigator.wakeLock?.request("screen").then(w=>rtWake=w).catch(()=>{})}catch(e){}
+  rtRun();renderRT()}
+function rtRun(){clearInterval(rtInt);RT.last=Date.now();rtInt=setInterval(rtStep,100)}
+function rtStep(){if(!RT||!RT.running)return;const now=Date.now();const before=Math.ceil(RT.left/1000);RT.left-=now-RT.last;RT.last=now;
+  const after=Math.ceil(RT.left/1000);if(after!==before&&after>0&&after<=3)rtBeep(RT_SND.tick);
+  if(RT.left<=0){let guard=0;while(RT&&RT.running&&RT.left<=0&&guard++<200)rtNext(-RT.left);renderRT()}else rtPaint()}
+// Naar de volgende fase; 'over' = de tijd die al over de grens is gelopen (blijft kloppen)
+function rtNext(over){const c=RT.cfg;over=Math.max(0,over||0);
+  if(RT.phase==="prep"){RT.phase="work";RT.left=c.work*1000-over;rtBeep(RT_SND.work)}
+  else if(RT.phase==="work"){
+    if(RT.round>=c.rounds){RT.phase="done";RT.left=0;RT.running=false;clearInterval(rtInt);rtInt=null;rtBeep(RT_SND.done);return}
+    if(c.rest>0){RT.phase="rest";RT.left=c.rest*1000-over;rtBeep(RT_SND.rest)}
+    else{RT.round++;RT.left=c.work*1000-over;rtBeep(RT_SND.work)}}
+  else if(RT.phase==="rest"){RT.round++;RT.phase="work";RT.left=c.work*1000-over;rtBeep(RT_SND.work)}}
+function rtPhaseLen(){const c=RT.cfg;return ({prep:c.prep,work:c.work,rest:c.rest}[RT.phase]||1)*1000}
+function rtPaint(){if(!RT||RT.phase==="setup")return;const t=$("#rt-time"),b=$("#rt-bar");
+  if(t)t.textContent=rtFmt(Math.max(0,Math.ceil(RT.left/1000)));if(b)b.style.width=Math.max(0,Math.min(100,100-RT.left/rtPhaseLen()*100))+"%"}
+function renderRT(){const el=$("#rtimer");if(!RT||!el)return;
+  if(RT.phase==="setup"){const c=RT.cfg;el.className="";
+    el.innerHTML=`<div class="rt">
+      <div class="row between"><h2>Rondetimer</h2><button class="btn" data-act="rtClose">Sluiten</button></div>
+      <div class="panel stack">
+        <div class="field"><span class="label">Snel kiezen</span><div class="row" style="gap:6px">${RT_PRESETS.map(([n],i)=>`<button type="button" class="chip" data-act="rtPreset" data-i="${i}">${h(n)}</button>`).join("")}</div></div>
+        <div class="fields">
+          <label class="field"><span class="label">Aantal ronden</span><input type="number" id="rt-rounds" min="1" max="99" inputmode="numeric" value="${c.rounds}" data-ch="rtCfg"></label>
+          <div class="field"><span class="label">Duur van een ronde (min : sec)</span><div class="rt-dur"><input type="number" id="rt-wm" min="0" max="99" inputmode="numeric" value="${Math.floor(c.work/60)}" data-ch="rtCfg" aria-label="Minuten ronde">:<input type="number" id="rt-ws" min="0" max="59" inputmode="numeric" value="${c.work%60}" data-ch="rtCfg" aria-label="Seconden ronde"></div></div>
+          <div class="field"><span class="label">Duur van de pauze (min : sec)</span><div class="rt-dur"><input type="number" id="rt-rm" min="0" max="99" inputmode="numeric" value="${Math.floor(c.rest/60)}" data-ch="rtCfg" aria-label="Minuten pauze">:<input type="number" id="rt-rs" min="0" max="59" inputmode="numeric" value="${c.rest%60}" data-ch="rtCfg" aria-label="Seconden pauze"></div></div>
+          <label class="field"><span class="label">Aftellen vooraf</span><select id="rt-prep" data-ch="rtCfg">${[0,5,10,15,30].map(s=>`<option value="${s}"${+c.prep===s?" selected":""}>${s?s+" seconden":"geen"}</option>`).join("")}</select></label>
+        </div>
+        <div class="small"><b id="rt-sum">${rtSummary(c)}</b></div>
+        <div class="small muted">Geluid aan het eind van elke ronde en pauze; de laatste 3 seconden tikken. Zet het volume van je toestel aan (op de iPhone ook de stille modus uit).</div>
+      </div>
+      <div class="rt-btns"><button class="btn primary" data-act="rtStart">Start</button></div>
+    </div>`;return}
+  const ph=RT_PH[RT.phase],c=RT.cfg;el.className="ph-"+RT.phase;
+  const next=RT.phase==="done"?"":RT.phase==="work"?(RT.round>=c.rounds?"Daarna: klaar":c.rest?`Daarna: pauze ${rtFmt(c.rest)}`:`Daarna: ronde ${RT.round+1}`):`Daarna: ronde ${RT.phase==="prep"?1:RT.round+1} (${rtFmt(c.work)})`;
+  el.innerHTML=`<div class="rt">
+    <div class="row between"><span class="small muted">Rondetimer · ${c.rounds} × ${rtFmt(c.work)}${c.rest?" / "+rtFmt(c.rest):""}</span><button class="btn" data-act="rtClose">Sluiten</button></div>
+    <div class="rt-ph">${ph[0]}<span class="tj" lang="ja">${ph[1]}</span></div>
+    <div class="rt-time" id="rt-time" aria-live="off">${RT.phase==="done"?"0:00":rtFmt(Math.max(0,Math.ceil(RT.left/1000)))}</div>
+    <div class="rt-round">${RT.phase==="done"?`Alle ${c.rounds} ronden gedaan · 押忍`:RT.phase==="prep"?`${c.rounds} ronden`:`Ronde ${RT.round} van ${c.rounds}`}${RT.running||RT.phase==="done"?"":" · gepauzeerd"}</div>
+    ${RT.phase==="done"?"":`<div class="rt-bar"><i id="rt-bar" style="width:0"></i></div><div class="small muted" style="text-align:center">${next}</div>`}
+    <div class="rt-btns">${RT.phase==="done"
+      ?`<button class="btn primary" data-act="rtStart">Opnieuw</button><button class="btn" data-act="rtSetup">Instellingen</button>`
+      :`<button class="btn primary" data-act="rtPause">${RT.running?"Pauze":"Doorgaan"}</button><button class="btn" data-act="rtSkip">Volgende →</button><button class="btn" data-act="rtSetup">Stoppen</button>`}</div>
+    <div class="small muted" style="text-align:center">Tip: op de laptop pauzeer je met de spatiebalk.</div>
+  </div>`;rtPaint()}
+document.addEventListener("keydown",e=>{if(!RT||RT.phase==="setup"||RT.phase==="done"||e.code!=="Space"||/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName))return;e.preventDefault();ACT.rtPause()});
 
 /* ============ ACTIES ============ */
 let saveT=null;
@@ -1782,6 +1877,13 @@ function setProg(sid,item,v){
   Store.patch("students",sid,{progress:{[item]:v}});
 }
 const ACT={
+  rtOpen:()=>openRT(),
+  rtClose:()=>closeRT(),
+  rtStart:()=>rtStart(),
+  rtPreset:el=>{Object.assign(RT.cfg,RT_PRESETS[+el.dataset.i][1]);renderRT()},
+  rtPause:()=>{if(!RT||RT.phase==="setup"||RT.phase==="done")return;RT.running=!RT.running;if(RT.running)rtRun();else{clearInterval(rtInt);rtInt=null}renderRT()},
+  rtSkip:()=>{if(!RT||RT.phase==="setup"||RT.phase==="done")return;rtNext(0);if(RT.running&&RT.phase!=="done")rtRun();renderRT()},
+  rtSetup:()=>{clearInterval(rtInt);rtInt=null;RT={cfg:RT.cfg,phase:"setup"};renderRT()},
   tab:el=>{S.tab=el.dataset.v;S.confirm=null;S.moreOpen=false;try{localStorage.setItem("kyo-tab",S.tab)}catch(e){}render();window.scrollTo({top:0})},
   moreToggle:()=>{S.moreOpen=!S.moreOpen;render()},
   clSend:async()=>{const email=($("#cl-email")?.value||"").trim();if(!/^\S+@\S+\.\S+$/.test(email)){S.login={email,err:"Vul een geldig e-mailadres in."};render();return}
@@ -1925,6 +2027,7 @@ const IN={
   block:el=>{S.draft.blocks[+el.dataset.b][el.dataset.f]=el.value;touchDraft(false)}
 };
 const CH={
+  rtCfg:()=>{if(!RT)return;const s=$("#rt-sum");if(s)s.textContent=rtSummary(rtReadCfg())},
   sfield:el=>{const f=el.dataset.f;let v=el.value;if(f==="birthYear")v=v?+v:"";if(f==="tussen")v=+v||0;if(["birthPlace","ifkNumber","nkaNumber"].includes(f))v=v.trim();if(f==="name"&&!v.trim())return;const s=S.students.find(x=>x.id===el.dataset.id);if(s)s[f]=v;
     const p={[f]:v};if(f==="birthDate"){p.birthYear=v?+v.slice(0,4):"";if(s)s.birthYear=p.birthYear}if(f==="current"){S.progGrade=null;if(s&&s.tussen){s.tussen=0;p.tussen=0}}Store.patch("students",el.dataset.id,p);requestRender()},
   sname:el=>{const s=S.students.find(x=>x.id===el.dataset.id);if(!s)return;const fn=($("#sd-first")?.value||"").trim(),ln=($("#sd-last-name")?.value||"").trim();
