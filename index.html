@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.5"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.6"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,7 +277,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.8.5",date:"2026-10-23",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.8.6",date:"2026-10-23",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -936,7 +936,7 @@ function render(){
   setHdr();
   const v=$("#view");
   const lc=v.querySelector&&v.querySelector(".listcol");const lcTop=lc?lc.scrollTop:0;
-  if(S.tab!=="leerlingen"||S.studentView!=="tabel")S._tsTop=0;
+  if(S.tab!=="leerlingen"||!["tabel","matrix"].includes(S.studentView))S._tsTop=0;
   if(!S.loaded){v.innerHTML=`<div class="empty">Gegevens laden…</div>`;return}
   try{v.innerHTML=({overzicht:vOverview,leerlingen:vStudents,lessen:vLessons,aanwezigheid:vAttendance,examen:vExam,wedstrijden:vComps,programma:vProgram,instellingen:vSettings}[S.tab]||vOverview)()}
   catch(e){console.error(e);v.innerHTML=`<div class="panel empty"><h3>Dit scherm kon niet worden getoond</h3><p class="small muted">Er ging iets mis bij het opbouwen. Je gegevens zijn niet aangetast. Probeer een ander tabblad of herlaad de pagina.</p></div>`}
@@ -1111,7 +1111,8 @@ function vMatrix(){
   let html=`<div class="row"><span class="label">Examengroep</span><select id="mx-g" data-ch="matrixGrade">${GRADES.map(x=>`<option value="${x.id}"${x.id===g?" selected":""}>Naar ${x.name} (${act().filter(s=>targetOf(s)===x.id).length})</option>`).join("")}</select>
    <span class="small muted">Tik op een vakje om de status te verhogen: – → I → O → ✓</span></div>`;
   if(!studs.length)return html+`<div class="panel flat empty"><h3>Geen leerlingen in deze groep</h3><p>Leerlingen komen hier als hun volgende examen ${G[g].name} is.</p></div>`;
-  html+=`<div class="tablewrap"><table><thead><tr><th style="min-width:220px">Onderdeel</th>${studs.map(s=>`<th class="c" style="min-width:64px" title="${h(s.name)}">${h(shortName(s))}</th>`).join("")}</tr></thead><tbody>`;
+  // tscroll: tabel scrolt binnen het venster, kop met de namen blijft staan (zoals de ledentabel)
+  html+=`<div class="tablewrap tscroll"><table><thead><tr><th style="min-width:220px">Onderdeel</th>${studs.map(s=>`<th class="c" style="min-width:64px" title="${h(s.name)}">${h(shortName(s))}</th>`).join("")}</tr></thead><tbody>`;
   G[g].cats.forEach(([c,l])=>{html+=`<tr class="cathead"><td colspan="${studs.length+1}">${CAT_LABEL[c]}</td></tr>`;
     l.forEach((txt,i)=>{const id=`${g}_${c}_${i}`;html+=`<tr><td>${h(txt)}</td>${studs.map(s=>{const v=s.progress?.[id]||0;return `<td class="c"><button class="cell" data-act="cycle" data-id="${s.id}" data-i="${id}" data-v="${v}" title="${h(s.name)}: ${STATUS[v]}" aria-label="${h(s.name)}, ${h(txt)}: ${STATUS[v]}">${STATUS_SHORT[v]}</button></td>`}).join("")}</tr>`})});
   html+=`<tr><td><b>Totaal klaar</b></td>${studs.map(s=>`<td class="c small"><b>${pct(readiness(s,g))}</b></td>`).join("")}</tr></tbody></table></div>`;
@@ -1924,7 +1925,7 @@ const ACT={
   clInvCopy:async()=>{const m=Cloud.members.find(x=>x.email===S.invite);if(!m)return;
     try{await navigator.clipboard.writeText(inviteMsg(m).text);toast("Tekst gekopieerd. Plak hem in een bericht aan de trainer.")}
     catch(e){toast("Kopiëren lukt hier niet; selecteer de tekst en kopieer hem zelf.")}},
-  sview:el=>{S.studentView=el.dataset.v;render()},
+  sview:el=>{S.studentView=el.dataset.v;S._tsTop=0;render()},
   selStudent:el=>{const changed=(el.dataset.id||null)!==S.selStudent;S.selStudent=el.dataset.id||null;S.progGrade=null;S.confirm=null;render();
     if(changed)window.scrollTo({top:0,behavior:"instant"})},
   goStudent:el=>{if(!tabAllowed("leerlingen"))return;S.tab="leerlingen";S.studentView="leerling";S.selStudent=el.dataset.id;S.progGrade=null;render();window.scrollTo({top:0})},
@@ -2042,7 +2043,7 @@ const CH={
   stus:el=>{const s=S.students.find(x=>x.id===el.dataset.id);if(!s)return;const k=tusOf(s);k[+el.dataset.i]=el.value;s.tussenKleuren=k;render();Store.patch("students",s.id,{tussenKleuren:k})},
   sjunior:el=>{const s=S.students.find(x=>x.id===el.dataset.id);if(!s)return;s.junior=el.checked;render();Store.patch("students",s.id,{junior:el.checked})},
   progGrade:el=>{S.progGrade=el.value;render()},
-  matrixGrade:el=>{S.matrixGrade=el.value;render()},
+  matrixGrade:el=>{S.matrixGrade=el.value;S._tsTop=0;render()},
   planGrade:el=>{S.planGrade=el.value;render()},
   examDate:el=>{Store.settings({examDate:el.value})},
   attDate:el=>{if(el.value){S.attDate=el.value;render()}},
