@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.6"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.9.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,7 +277,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.8.6",date:"2026-10-23",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.9.0",date:"2026-10-23",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -506,6 +506,8 @@ function groupsCfg(){const g=S.settings.groups;if(Array.isArray(g)&&g.length)ret
   return d.map(x=>({id:"d"+x,day:x,name:"Training",who:"all"}))}
 function trainingDays(){return [...new Set(groupsCfg().map(g=>+g.day))]}
 const groupById=id=>groupsCfg().find(g=>g.id===id);
+const grpMin=g=>Math.max(15,Math.min(240,+(g&&g.min)||60));// standaard lesduur van een lesgroep (minuten)
+const clampMin=v=>Math.max(5,Math.min(300,Math.round(+v||0)))||60;
 const groupLabel=g=>g?`${DAYS_S[+g.day]} · ${g.name}`:"onbekende groep";
 const groupsOnDay=w=>groupsCfg().filter(g=>+g.day===w);
 const defaultMember=(s,g)=>g.who==="all"||(g.who==="junior"&&!!s.junior)||(g.who==="senior"&&!s.junior);
@@ -1126,7 +1128,8 @@ function vLessons(){
   const upcoming=ls.filter(l=>l.date>=today()).reverse(),past=ls.filter(l=>l.date<today());
   const nl=S.newLesson;if(!nl.date)nl.date=shiftTraining(today(),1,true);
   if(!nl.init){nl.init=true;nl.grades=groups().map(x=>x.g).slice(0,2)}
-  if(!nl.group||!groupById(nl.group)){const dg=groupsOnDay(wd(nl.date));nl.group=(dg[0]||groupsCfg()[0])?.id||""}
+  if(!nl.group||!groupById(nl.group)){const dg=groupsOnDay(wd(nl.date));nl.group=(dg[0]||groupsCfg()[0])?.id||"";nl.minSet=false}
+  if(!nl.minSet)nl.min=grpMin(groupById(nl.group));// standaardduur van de lesgroep, tot je zelf iets invult
   const li=l=>`<button class="li" data-act="openLesson" data-id="${l.id}" aria-current="${l.id===S.selLesson}"><span class="grow"><span class="name">${h(l.title)}</span><span class="small muted">${fmt(l.date)}${l.group&&groupById(l.group)?" · "+h(groupById(l.group).name):""} · ${sumMin(l)} min</span></span><span class="row" style="gap:3px">${(l.grades||[]).map(g=>belt(g)).join("")}</span></button>`;
   return `<div class="grid2 ${sel?"has-sel":""}">
    <div class="listcol stack">
@@ -1134,7 +1137,7 @@ function vLessons(){
     <div class="panel stack" style="gap:10px">
       <div class="label">Nieuwe les</div>
       <div class="fields"><label class="field"><span class="label">Datum</span><input type="date" id="nl-date" value="${nl.date}" data-ch="nl" data-f="date"></label>
-      <label class="field"><span class="label">Duur</span><select id="nl-min" data-ch="nl" data-f="min">${[45,60,75,90,120].map(m=>`<option value="${m}"${+nl.min===m?" selected":""}>${m} min</option>`).join("")}</select></label></div>
+      <label class="field"><span class="label">Duur (min)</span><input type="number" id="nl-min" min="5" max="300" step="5" inputmode="numeric" value="${nl.min}" data-ch="nl" data-f="min"></label></div>
       <label class="field"><span class="label">Lesgroep</span><select id="nl-group" data-ch="nlGroup">${sortedGroups().map(g=>`<option value="${g.id}"${g.id===nl.group?" selected":""}>${h(groupLabel(g))} (${WHO[g.who].toLowerCase()})</option>`).join("")}</select>
         <span class="small muted">Kiest automatisch de examengroepen van de leden.</span></label>
       <div class="field"><span class="label">Examengroepen in de les</span><div class="row" style="gap:6px">${GRADES.map(g=>`<button type="button" class="chip" data-act="nlg" data-g="${g.id}" aria-pressed="${nl.grades.includes(g.id)}">${belt(g.id)}${g.name}</button>`).join("")}</div></div>
@@ -1163,7 +1166,8 @@ function vLessonEditor(l){
     <div><button class="btn sm ghost back" data-act="closeLesson">← Alle lessen</button></div>
     <div class="fields"><label class="field" style="grid-column:span 2"><span class="label">Titel</span><input type="text" id="le-title" value="${h(l.title)}" data-in="lesson" data-f="title"></label>
     <label class="field"><span class="label">Datum</span><input type="date" id="le-date" value="${h(l.date)}" data-ch="lessonC" data-f="date"></label>
-    <label class="field"><span class="label">Lesgroep</span><select id="le-group" data-ch="lessonC" data-f="group"><option value="">Geen</option>${sortedGroups().map(g=>`<option value="${g.id}"${g.id===l.group?" selected":""}>${h(groupLabel(g))}</option>`).join("")}</select></label></div>
+    <label class="field"><span class="label">Lesgroep</span><select id="le-group" data-ch="lessonC" data-f="group"><option value="">Geen</option>${sortedGroups().map(g=>`<option value="${g.id}"${g.id===l.group?" selected":""}>${h(groupLabel(g))}</option>`).join("")}</select></label>
+    <label class="field"><span class="label">Duur (min)</span><input type="number" id="le-min" min="5" max="300" step="5" inputmode="numeric" value="${+l.min||60}" data-ch="lessonC" data-f="min"></label></div>
     <div class="row between"><div class="row small"><span class="label">Groepen</span>${(l.grades||[]).map(g=>`<span class="row" style="gap:4px">${belt(g)}${G[g].name}</span>`).join(" ")||"–"}</div>
     <div class="small" style="font-variant-numeric:tabular-nums"><b>${tot}</b> van ${l.min} min ${tot>l.min?`<span class="pill bad">${tot-l.min} min te veel</span>`:tot<l.min?`<span class="pill warn">${l.min-tot} min over</span>`:`<span class="pill ok">past precies</span>`}</div></div>
     ${timeline(l)}
@@ -1726,11 +1730,12 @@ function vSettings(){
   <div class="panel stack">
     <h2>Lesgroepen</h2>
     <p class="small muted" style="margin:0">Een lesgroep is een vaste les op een dag. "Voor wie" bepaalt wie er standaard in zit; per leerling kun je dat aanpassen, bijvoorbeeld iemand die op woensdag beide lessen meedoet.</p>
-    <div class="tablewrap"><table><thead><tr><th>Dag</th><th>Naam</th><th>Voor wie</th><th class="c">Leden</th><th></th></tr></thead><tbody>
+    <div class="tablewrap"><table><thead><tr><th>Dag</th><th>Naam</th><th>Voor wie</th><th>Lesduur</th><th class="c">Leden</th><th></th></tr></thead><tbody>
     ${gs.map((g,i)=>{const armed=S.confirm==="dg-"+g.id;return `<tr>
       <td><select id="grp-day-${i}" data-ch="grpField" data-i="${i}" data-f="day" aria-label="Dag">${WEEK_ORDER.map(d=>`<option value="${d}"${+g.day===d?" selected":""}>${DAYS[d]}</option>`).join("")}</select></td>
       <td><input type="text" id="grp-name-${i}" value="${h(g.name)}" data-ch="grpField" data-i="${i}" data-f="name" aria-label="Naam" style="min-width:120px"></td>
       <td><select id="grp-who-${i}" data-ch="grpField" data-i="${i}" data-f="who" aria-label="Voor wie">${Object.entries(WHO).map(([k,v])=>`<option value="${k}"${g.who===k?" selected":""}>${v}</option>`).join("")}</select></td>
+      <td style="white-space:nowrap"><input type="number" id="grp-min-${i}" min="15" max="240" step="5" inputmode="numeric" value="${grpMin(g)}" data-ch="grpField" data-i="${i}" data-f="min" aria-label="Lesduur in minuten" style="width:72px"> <span class="small muted">min</span></td>
       <td class="c small">${act().filter(s=>studentGroups(s).includes(g.id)).length}</td>
       <td>${gs.length>1?`<button class="btn sm danger ${armed?"armed":""}" data-act="grpDel" data-i="${i}">${armed?"Zeker?":"Verwijderen"}</button>`:""}</td></tr>`}).join("")}
     </tbody></table></div>
@@ -1939,7 +1944,7 @@ const ACT={
   nlg:el=>{const g=el.dataset.g,a=S.newLesson.grades;const i=a.indexOf(g);if(i>=0)a.splice(i,1);else a.push(g);render()},
   genLesson:()=>{const n=S.newLesson;if(!n.grades.length)return toast("Kies minstens één examengroep.");createLesson(generateLesson(n))},
   emptyLesson:()=>{const n=S.newLesson;createLesson({date:n.date||today(),title:groupById(n.group)?groupById(n.group).name+": nieuwe les":"Nieuwe les",min:+n.min,grades:[...n.grades],jeugd:n.jeugd,group:n.group||"",blocks:[{id:uid(),type:"open",title:"Opening",min:2,items:[],note:""}],notes:"",updatedAt:Date.now()})},
-  quickLesson:el=>{const d=shiftTraining(today(),1,true);const n={date:d,min:60,grades:[el.dataset.g],jeugd:false,group:groupsOnDay(wd(d))[0]?.id||""};createLesson(generateLesson(n))},
+  quickLesson:el=>{const d=shiftTraining(today(),1,true);const n={date:d,min:grpMin(groupsOnDay(wd(d))[0]),grades:[el.dataset.g],jeugd:false,group:groupsOnDay(wd(d))[0]?.id||""};createLesson(generateLesson(n))},
   openLesson:el=>openLesson(el.dataset.id),
   closeLesson:()=>{if(S.dirty)saveDraft();S.selLesson=null;S.draft=null;render()},
   dupLesson:()=>{const d=clone(S.draft);delete d.id;d.date=today();d.title=d.title+" (kopie)";d.blocks.forEach(b=>{b.id=uid();b.items.forEach(i=>{i.done=false;i.id=uid()})});createLesson(d)},
@@ -2085,17 +2090,17 @@ const CH={
   repDate:el=>{if(!el.value)return;S[el.dataset.f]=el.value;render()},
   printGroup:el=>{const s=new Set(S.printSkip||[]);if(el.checked)s.delete(el.dataset.g);else s.add(el.dataset.g);S.printSkip=[...s]},
   attNote:el=>{upsertAtt(curAttDate(),curAttGroup(),{note:el.value})},
-  grpField:el=>{const gs=clone(groupsCfg());const g=gs[+el.dataset.i];if(!g)return;const f=el.dataset.f;let v=el.value;if(f==="day")v=+v;if(f==="name"&&!v.trim())return render();g[f]=f==="name"?v.trim():v;Store.settings({groups:gs})},
-  nlGroup:el=>{const n=S.newLesson;n.group=el.value;const g=groupById(n.group);if(g){
+  grpField:el=>{const gs=clone(groupsCfg());const g=gs[+el.dataset.i];if(!g)return;const f=el.dataset.f;let v=el.value;if(f==="day")v=+v;if(f==="min")v=grpMin({min:Math.round(+v/5)*5});if(f==="name"&&!v.trim())return render();g[f]=f==="name"?v.trim():v;Store.settings({groups:gs})},
+  nlGroup:el=>{const n=S.newLesson;n.group=el.value;n.minSet=false;const g=groupById(n.group);if(g){
     const tg=[...new Set(act().filter(s=>studentGroups(s).includes(g.id)).map(targetOf).filter(Boolean))];if(tg.length)n.grades=tg;n.jeugd=g.who==="junior";
     if(wd(n.date)!==+g.day)n.date=nextDay(n.date,+g.day)}render()},
   setting:el=>{const f=el.dataset.f;let v=el.value;
     Store.settings({[f]:v})},
   bandField:el=>{const B=clone(attBands());const v=Math.min(100,Math.max(0,Math.round(+el.value||0)));B[el.dataset.k][+el.dataset.i]=v;
     B[el.dataset.k]=[Math.min(...B[el.dataset.k]),Math.max(...B[el.dataset.k])];Store.settings({attBands:B,minAttendance:B.ok[0]})},
-  nl:el=>{const f=el.dataset.f;const n=S.newLesson;n[f]=el.type==="checkbox"?el.checked:(f==="min"?+el.value:el.value);
-    if(f==="date"&&n.date){const g=groupById(n.group);if(!g||+g.day!==wd(n.date)){const dg=groupsOnDay(wd(n.date));if(dg[0]){n.group=dg[0].id;render()}}}},
-  lessonC:el=>{S.draft[el.dataset.f]=el.value;touchDraft()},
+  nl:el=>{const f=el.dataset.f;const n=S.newLesson;n[f]=el.type==="checkbox"?el.checked:(f==="min"?clampMin(el.value):el.value);if(f==="min"){n.minSet=true;el.value=n.min}
+    if(f==="date"&&n.date){const g=groupById(n.group);if(!g||+g.day!==wd(n.date)){const dg=groupsOnDay(wd(n.date));if(dg[0]){n.group=dg[0].id;n.minSet=false;render()}}}},
+  lessonC:el=>{const f=el.dataset.f;S.draft[f]=f==="min"?clampMin(el.value):el.value;touchDraft()},
   blockMin:el=>{S.draft.blocks[+el.dataset.b].min=Math.max(0,+el.value||0);touchDraft()},
   addSyl:el=>{const it=ITEM[el.value];if(!it)return;S.draft.blocks[+el.dataset.b].items.push({id:uid(),t:it.t,ref:it.id,g:it.g,done:false});touchDraft()},
   addWarm:el=>{const w=WARM.find(x=>x.id===el.value);if(!w)return;const b=S.draft.blocks[+el.dataset.b];b.items.push({id:uid(),t:`${w.t} (${w.m} min)`,warm:w.id,done:false});touchDraft()},
