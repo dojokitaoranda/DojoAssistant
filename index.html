@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.4"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.8.5"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,7 +277,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.8.4",date:"2026-10-23",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.8.5",date:"2026-10-23",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -407,7 +407,9 @@ const BELT_BASE={"0":"#F6F6F3","10k":"#C8202B","9k":"#C8202B","8k":"#2F5FB3","7k
 const BLACK_STRIPE=new Set(["9k","7k","5k","3k","1k"]);
 const DAN_STRIPES={"1d":1,"2d":2,"3d":3};
 const BELT_NAME={"0":"wit","10k":"rood","9k":"rood met zwarte streep","8k":"blauw","7k":"blauw met zwarte streep","6k":"geel","5k":"geel met zwarte streep","4k":"groen","3k":"groen met zwarte streep","2k":"bruin","1k":"bruin met zwarte streep","1d":"zwart met 1 gouden streep","2d":"zwart met 2 gouden strepen","3d":"zwart met 3 gouden strepen"};
-const TUSSEN_COLORS={wit:"#F2F2F2",rood:"#C8202B",oranje:"#E8772E",geel:"#E9C832",groen:"#2E8B4A",blauw:"#2F5FB3",paars:"#7A4BB0",bruin:"#7A4A26",zilver:"#B8BCC4",goud:"#C9A227"};
+const TUSSEN_COLORS={wit:"#F2F2F2",rood:"#C8202B",oranje:"#E8772E",geel:"#E9C832",groen:"#2E8B4A",blauw:"#2F5FB3",paars:"#7A4BB0",bruin:"#7A4A26",zilver:"#B8BCC4",goud:"#C9A227",zwart:"#151515"};
+// Kiesbare kleuren voor tussenstrepen bij de jeugd (oude waarden blijven zichtbaar tot ze worden aangepast)
+const TUSSEN_KEUZE=["blauw","geel","groen","bruin","zwart"];
 const G=Object.fromEntries(GRADES.map(g=>[g.id,g]));
 const ORDER=GRADES.map(g=>g.id);
 const STATUS=["Niet gestart","Geïntroduceerd","Oefenen","Examenklaar"];
@@ -467,7 +469,7 @@ function belt(gid,tusList=[]){
   stops.push(`${base} ${pos}% 100%`);
   const title=(BELT_NAME[gid]||"wit")+(tus?` + tussenstre${tus===1?"ep":"pen"} ${tusList.join(", ")}`:"");
   return `<span class="belt" style="background:linear-gradient(90deg,${stops.join(",")})" title="${title}" aria-hidden="true"></span>`}
-function tusOf(s){if(!s.junior)return[];const n=Math.min(4,+s.tussen||0);const k=Array.isArray(s.tussenKleuren)?s.tussenKleuren:[];return Array.from({length:n},(_,i)=>TUSSEN_COLORS[k[i]]?k[i]:"wit")}
+function tusOf(s){if(!s.junior)return[];const n=Math.min(4,+s.tussen||0);const k=Array.isArray(s.tussenKleuren)?s.tussenKleuren:[];return Array.from({length:n},(_,i)=>TUSSEN_COLORS[k[i]]?k[i]:TUSSEN_KEUZE[0])}
 const sbelt=s=>belt(s.current||"0",tusOf(s));
 const gname=gid=>gid==="0"?"Geen graad (wit)":(G[gid]?.name||"–");
 function itemsOf(gid){const g=G[gid];if(!g)return[];const out=[];g.cats.forEach(([c,l])=>l.forEach((t,i)=>out.push({id:`${gid}_${c}_${i}`,c,t,g:gid})));return out}
@@ -1064,7 +1066,7 @@ function vStudentDetail(s,gopts){
      <label class="row small" style="font-weight:600"><input type="checkbox" id="sd-jr" data-ch="sjunior" data-id="${s.id}" ${s.junior?"checked":""}> Junior</label>
      ${s.junior?`<div class="row" style="gap:8px;align-items:flex-end">
        <label class="field"><span class="label">Tussenstrepen</span><select id="sd-tus" data-ch="sfield" data-f="tussen" data-id="${s.id}">${[0,1,2,3,4].map(n=>`<option value="${n}"${(+s.tussen||0)===n?" selected":""}>${n===0?"geen":n}</option>`).join("")}</select></label>
-       ${tusOf(s).map((k,i)=>`<label class="field"><span class="label">Streep ${i+1}</span><select id="sd-tk-${i}" data-ch="stus" data-id="${s.id}" data-i="${i}">${Object.keys(TUSSEN_COLORS).map(c=>`<option value="${c}"${c===k?" selected":""}>${c}</option>`).join("")}</select></label>`).join("")}
+       ${tusOf(s).map((k,i)=>`<label class="field"><span class="label">Streep ${i+1}</span><select id="sd-tk-${i}" data-ch="stus" data-id="${s.id}" data-i="${i}">${[...(TUSSEN_KEUZE.includes(k)?[]:[k]),...TUSSEN_KEUZE].map(c=>`<option value="${c}"${c===k?" selected":""}>${c}</option>`).join("")}</select></label>`).join("")}
      </div>
      <p class="small muted" style="margin:0">Tussenstrepen zijn geen examen. Een zwarte streep is wel een kyu-graad: die stel je in bij "Huidige graad".</p>`:""}
    </div>
