@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.9.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.9.2"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -145,6 +145,12 @@ textarea{width:100%;min-height:70px;resize:vertical}
 .check .cl{font-weight:600}
 .ck{width:10px;height:10px;border-radius:50%;background:var(--s0)}
 .ck.ok{background:var(--s3)}.ck.warn{background:var(--s2)}.ck.bad{background:var(--kiai)}.ck.none{background:transparent}
+.le-head{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.1fr) 96px minmax(0,1.2fr);gap:12px;align-items:end}
+.le-head input,.le-head select{width:100%}
+.le-sum{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px}
+.le-grades{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.le-grades .belts{display:inline-flex;gap:3px;flex-wrap:wrap}
+@media (max-width:560px){.le-head{grid-template-columns:minmax(0,1fr) 96px}.le-head .f-title,.le-head .f-group{grid-column:1/-1}}
 .fields3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;align-items:end}
 .fields3 .label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fields3 input,.fields3 select{width:100%;height:38px}
@@ -195,8 +201,15 @@ td.c,th.c{text-align:center}
 tr.cathead td{background:var(--bg);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 
 .block{border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
-.block > .bh{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.block > .bh input[type=text]{flex:1;min-width:140px;font-weight:700}
+/* Blokkop: breed (laptop, liggend) alles op één regel; smal (telefoon rechtop) twee nette regels:
+   [type ............ ↑ ↓ ✕] / [titel ......... min]. Gekeken naar de breedte van het blok zelf (container query). */
+.block{container-type:inline-size}
+.block > .bh{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"type title min ctl";gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.bh .btype{grid-area:type;justify-self:start;white-space:nowrap}
+.bh .btitle{grid-area:title;width:100%;min-width:0;font-weight:700}
+.bh .bmin{grid-area:min;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.bh .bctl{grid-area:ctl;display:flex;gap:2px;justify-self:end}
+@container (max-width:520px){.block > .bh{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"type ctl" "title min";row-gap:6px}}
 .block > .bb{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .btype{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:3px;background:var(--sunk);color:var(--muted)}
 .bi{display:flex;gap:8px;align-items:flex-start}
@@ -277,7 +290,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.9.0",date:"2026-10-23",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.9.2",date:"2026-10-23",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -1164,12 +1177,14 @@ function vLessonEditor(l){
   return `<div class="stack">
   <div class="panel stack">
     <div><button class="btn sm ghost back" data-act="closeLesson">← Alle lessen</button></div>
-    <div class="fields"><label class="field" style="grid-column:span 2"><span class="label">Titel</span><input type="text" id="le-title" value="${h(l.title)}" data-in="lesson" data-f="title"></label>
+    <div class="le-head"><label class="field f-title"><span class="label">Titel</span><input type="text" id="le-title" value="${h(l.title)}" data-in="lesson" data-f="title"></label>
     <label class="field"><span class="label">Datum</span><input type="date" id="le-date" value="${h(l.date)}" data-ch="lessonC" data-f="date"></label>
-    <label class="field"><span class="label">Lesgroep</span><select id="le-group" data-ch="lessonC" data-f="group"><option value="">Geen</option>${sortedGroups().map(g=>`<option value="${g.id}"${g.id===l.group?" selected":""}>${h(groupLabel(g))}</option>`).join("")}</select></label>
-    <label class="field"><span class="label">Duur (min)</span><input type="number" id="le-min" min="5" max="300" step="5" inputmode="numeric" value="${+l.min||60}" data-ch="lessonC" data-f="min"></label></div>
-    <div class="row between"><div class="row small"><span class="label">Groepen</span>${(l.grades||[]).map(g=>`<span class="row" style="gap:4px">${belt(g)}${G[g].name}</span>`).join(" ")||"–"}</div>
-    <div class="small" style="font-variant-numeric:tabular-nums"><b>${tot}</b> van ${l.min} min ${tot>l.min?`<span class="pill bad">${tot-l.min} min te veel</span>`:tot<l.min?`<span class="pill warn">${l.min-tot} min over</span>`:`<span class="pill ok">past precies</span>`}</div></div>
+    <label class="field"><span class="label">Duur (min)</span><input type="number" id="le-min" min="5" max="300" step="5" inputmode="numeric" value="${+l.min||60}" data-ch="lessonC" data-f="min"></label>
+    <label class="field f-group"><span class="label">Lesgroep</span><select id="le-group" data-ch="lessonC" data-f="group"><option value="">Geen</option>${sortedGroups().map(g=>`<option value="${g.id}"${g.id===l.group?" selected":""}>${h(groupLabel(g))}</option>`).join("")}</select></label></div>
+    <div class="le-sum">${(()=>{const gr=[...(l.grades||[])].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
+      // veel examengroepen: alleen de banden (naam als tooltip) en het bereik, zodat het op de telefoon op één regel past
+      return `<div class="le-grades small"><span class="label">Groepen</span>${!gr.length?"–":gr.length>4?`<span class="belts">${gr.map(g=>`<span title="${G[g].name}">${belt(g)}</span>`).join("")}</span><span class="muted">${G[gr[0]].name} – ${G[gr[gr.length-1]].name}</span>`:gr.map(g=>`<span class="row" style="gap:4px;flex-wrap:nowrap">${belt(g)}${G[g].name}</span>`).join("")}</div>`})()}
+    <div class="small" style="font-variant-numeric:tabular-nums;white-space:nowrap"><b>${tot}</b> van ${l.min} min ${tot>l.min?`<span class="pill bad">${tot-l.min} min te veel</span>`:tot<l.min?`<span class="pill warn">${l.min-tot} min over</span>`:`<span class="pill ok">past precies</span>`}</div></div>
     ${timeline(l)}
     <div class="row"><button class="btn primary" data-act="dojo" data-id="${l.id}">Dojo-modus starten</button><button class="btn" data-act="dupLesson">Dupliceren</button>
       <button class="btn ${armedR?"danger armed":""}" data-act="regen">${armedR?"Klik nogmaals: huidige inhoud vervangen":"Opnieuw voorstellen"}</button>
@@ -1177,11 +1192,9 @@ function vLessonEditor(l){
   </div>
   ${l.blocks.map((b,bi)=>`<div class="block">
     <div class="bh"><span class="btype" style="color:${BLOCK_COLOR[b.type]}">${BLOCK_TYPES[b.type]||"Blok"}</span>
-      <input type="text" id="b-t-${b.id}" value="${h(b.title)}" data-in="block" data-b="${bi}" data-f="title" aria-label="Bloktitel">
-      <label class="row small" style="gap:4px"><input type="number" class="mins" id="b-m-${b.id}" min="0" max="180" value="${b.min}" data-ch="blockMin" data-b="${bi}" aria-label="Minuten"> min</label>
-      <button class="btn sm ghost" data-act="mvBlock" data-b="${bi}" data-d="-1" ${bi===0?"disabled":""} aria-label="Omhoog">↑</button>
-      <button class="btn sm ghost" data-act="mvBlock" data-b="${bi}" data-d="1" ${bi===l.blocks.length-1?"disabled":""} aria-label="Omlaag">↓</button>
-      <button class="btn sm ghost danger" data-act="rmBlock" data-b="${bi}" aria-label="Blok verwijderen">✕</button></div>
+      <input type="text" class="btitle" id="b-t-${b.id}" value="${h(b.title)}" data-in="block" data-b="${bi}" data-f="title" aria-label="Bloktitel">
+      <label class="bmin small"><input type="number" class="mins" id="b-m-${b.id}" min="0" max="180" inputmode="numeric" value="${b.min}" data-ch="blockMin" data-b="${bi}" aria-label="Minuten"> min</label>
+      <span class="bctl"><button class="btn sm ghost" data-act="mvBlock" data-b="${bi}" data-d="-1" ${bi===0?"disabled":""} aria-label="Omhoog">↑</button><button class="btn sm ghost" data-act="mvBlock" data-b="${bi}" data-d="1" ${bi===l.blocks.length-1?"disabled":""} aria-label="Omlaag">↓</button><button class="btn sm ghost danger" data-act="rmBlock" data-b="${bi}" aria-label="Blok verwijderen">✕</button></span></div>
     <div class="bb">
       ${b.items.map((it,ii)=>`<div class="bi"><span class="t">${h(it.t)}</span>${it.g&&it.ref?`<span class="g">${G[it.g]?.name||""}</span>`:""}<button class="btn sm ghost" data-act="rmItem" data-b="${bi}" data-i="${ii}" aria-label="Onderdeel verwijderen">✕</button></div>`).join("")}
       <div class="row" style="gap:6px">
