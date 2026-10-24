@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.9.2"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.10.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,6 +151,24 @@ textarea{width:100%;min-height:70px;resize:vertical}
 .le-grades{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 .le-grades .belts{display:inline-flex;gap:3px;flex-wrap:wrap}
 @media (max-width:560px){.le-head{grid-template-columns:minmax(0,1fr) 96px}.le-head .f-title,.le-head .f-group{grid-column:1/-1}}
+/* Examenbeoordeling */
+.exform{max-width:900px}
+.exrow{display:flex;flex-direction:column;gap:8px}
+.exhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.exhead h3{margin:0;min-width:170px;flex:1}
+.exscore{display:inline-flex;gap:5px}
+.exscore .sc{width:42px;height:42px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);font-weight:800;font-size:1.05rem;cursor:pointer;color:var(--ink)}
+.exscore .sc[aria-pressed="true"].sbad{background:var(--kiai);border-color:var(--kiai);color:#fff}
+.exscore .sc[aria-pressed="true"].swarn{background:var(--s2);border-color:var(--s2);color:#fff}
+.exscore .sc[aria-pressed="true"].sok{background:var(--s3);border-color:var(--s3);color:#fff}
+.exscore .sc:disabled{cursor:default;opacity:.85}
+.exlbl{font-size:.85rem;font-weight:700;min-width:96px;color:var(--muted)}
+.exlbl.bad{color:var(--kiai)}.exlbl.warn{color:color-mix(in srgb,var(--s2) 75%,var(--ink))}.exlbl.ok{color:var(--s3)}
+.exrow textarea{min-height:44px}
+.hrow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.hrow .hd{font-variant-numeric:tabular-nums;font-size:.85rem;color:var(--muted)}
+.hadd{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:8px}
+@media (max-width:560px){.hadd{grid-template-columns:minmax(0,1fr) auto}.hadd #h-text{grid-column:1/-1;grid-row:2}.hrow{grid-template-columns:minmax(0,1fr) auto}.hrow .hd{grid-column:1/-1}.exscore .sc{width:38px;height:38px}}
 .fields3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;align-items:end}
 .fields3 .label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fields3 input,.fields3 select{width:100%;height:38px}
@@ -290,7 +308,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.9.2",date:"2026-10-23",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.10.0",date:"2026-10-24",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -703,7 +721,7 @@ Gebruik precies dit e-mailadres, anders krijg je geen toegang.
 
 Osu!
 ${from==="de beheerder"?"":from}`.trim()}}
-const PRIV_FIELDS=["birthDate","birthYear","birthPlace","ifkNumber","nkaNumber","notes"];
+const PRIV_FIELDS=["birthDate","birthYear","birthPlace","ifkNumber","nkaNumber","notes","history","examForms"];
 const ROLE_LABEL={admin:"beheerder",hoofdtrainer:"hoofdtrainer",trainer:"trainer"};
 const Cloud={client:null,dojo:null,dojoName:"",role:null,email:"",queue:[],status:"",live:false,members:[],session:false,
   // De deelbare losse versie (window.DOJO_STANDALONE, gezet door build-standalone.js) heeft geen online samenwerken
@@ -1088,6 +1106,7 @@ function vStudentDetail(s,gopts){
    <label class="field"><span class="label">Notities</span><textarea id="sd-notes" data-ch="sfield" data-f="notes" data-id="${s.id}" placeholder="Bijv. blessures, aandachtspunten, motivatie">${h(s.notes||"")}</textarea></label>
    <div class="row" style="justify-content:flex-end"><button class="btn sm" data-act="sarchive" data-id="${s.id}">${s.archived?"Terugzetten naar actief":"Archiveren"}</button><button class="btn sm danger ${armed?"armed":""}" data-act="delStudent" data-id="${s.id}">${armed?"Klik nogmaals om te verwijderen":"Leerling verwijderen"}</button></div>
   </div></details></div>`;
+  html+=vHistory(s);// historie vóór de (lange) voortgangslijst
   if(pg){
     html+=`<details class="panel sec" data-sec="voortgang" style="margin-top:14px" ${open("voortgang")?"open":""}><summary><h3>Voortgang</h3><span class="small muted">${G[pg].name} · ${pct(readiness(s,pg))} klaar</span></summary>
       <div class="row between" style="margin-top:10px"><span></span>
@@ -1211,6 +1230,7 @@ function vLessonEditor(l){
 
 /* ---------- Examen ---------- */
 function vExam(){
+  if(S.exForm)return vExamForm();
   const ex=S.settings.examDate||"";const gs=groups();
   const pg=S.planGrade&&G[S.planGrade]?S.planGrade:(gs[0]?.g||"10k");
   let html=`<div class="stack"><div class="panel row between">
@@ -1222,9 +1242,10 @@ function vExam(){
     const cs=S.candSort||"status";
     const cands=gs.flatMap(({studs})=>studs).map(s=>({s,el:eligibility(s,ex)})).sort(cs==="naam"?(a,b)=>nm(a.s,b.s):cs==="graad"?(a,b)=>gi(b.s)-gi(a.s)||nm(a.s,b.s):(a,b)=>EL_ORDER[a.el.state]-EL_ORDER[b.el.state]||gi(b.s)-gi(a.s)||nm(a.s,b.s)).map(x=>x.s);const passSel=new Set((S.passSel||[]).filter(id=>cands.some(s=>s.id===id)));
     const rd=S.resultDate||(ex&&ex<=today()?ex:today());const armedP=S.confirm==="pass";
-    html+=`<div class="row between"><h2>Kandidaten</h2><div class="row" role="group" aria-label="Sorteren"><span class="label">Sorteren op</span>${[["status","Status"],["graad","Graad"],["naam","Naam"]].map(([v,l])=>`<button class="chip" data-act="candSort" data-v="${v}" aria-pressed="${cs===v}">${l}</button>`).join("")}</div></div><div class="tablewrap"><table><thead><tr><th class="c">Geslaagd</th><th>Leerling</th><th>Examen naar</th><th>Klaar</th><th>Aanwezig</th><th>Toelating</th></tr></thead><tbody>${cands.map(s=>{const t=targetOf(s);const el=eligibility(s,ex);const st=attStats(s);
+    html+=`<div class="row between"><h2>Kandidaten</h2><div class="row" role="group" aria-label="Sorteren"><span class="label">Sorteren op</span>${[["status","Status"],["graad","Graad"],["naam","Naam"]].map(([v,l])=>`<button class="chip" data-act="candSort" data-v="${v}" aria-pressed="${cs===v}">${l}</button>`).join("")}</div></div><div class="tablewrap"><table><thead><tr><th class="c">Geslaagd</th><th>Leerling</th><th>Examen naar</th><th>Klaar</th><th>Aanwezig</th><th>Toelating</th><th>Beoordeling</th></tr></thead><tbody>${cands.map(s=>{const t=targetOf(s);const el=eligibility(s,ex);const st=attStats(s);
       return `<tr><td class="c"><input type="checkbox" id="pass-${s.id}" data-ch="passSel" data-id="${s.id}" ${passSel.has(s.id)?"checked":""} aria-label="${h(s.name)} geslaagd"></td><td><button class="btn ghost sm" data-act="goStudent" data-id="${s.id}">${h(s.name)}</button></td><td style="white-space:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap">${belt(t)}${G[t].name}</span></td><td style="min-width:120px"><div class="row" style="flex-wrap:nowrap">${barH(readiness(s))}<span class="small">${pct(readiness(s))}</span></div></td><td class="small" style="white-space:nowrap">${attPill(st)}</td>
-      <td class="small">${eligPill(el)}${el.notes.length?`<div class="muted" style="margin-top:3px">${h(el.notes.join(" · "))}</div>`:""}</td></tr>`}).join("")}</tbody></table></div>
+      <td class="small">${eligPill(el)}${el.notes.length?`<div class="muted" style="margin-top:3px">${h(el.notes.join(" · "))}</div>`:""}</td>
+      <td style="white-space:nowrap">${(()=>{const f=openFormOf(s);const fs=f?formStats(f):null;return `<button class="btn sm ${f?"":"primary"}" data-act="exOpen" data-id="${s.id}">${f?`Verder (${fs.done}/${fs.all})`:"Beoordelen"}</button>`})()}</td></tr>`}).join("")}</tbody></table></div>
     <div class="panel stack" style="gap:10px">
       <div class="row between"><h3>Examenuitslag verwerken</h3><span class="small muted">${passSel.size} geslaagd aangevinkt</span></div>
       <div class="row" style="align-items:flex-end">
@@ -1405,6 +1426,110 @@ async function buildRepPdf(){
   doc.text(doc.splitTextToSize(`Per leerling geteld vanaf "lid sinds" als dat later is. Open = lessen van de eigen lesgroepen die nog niet zijn ingevoerd. Vervallen lessen tellen niet mee. Gemaakt op ${fmtY(today())}.`,W-2*M),M,H-9);
   return doc.output("arraybuffer");
 }
+
+/* ---------- Examenbeoordeling en historie ----------
+   Per leerling: examForms {id: formulier} en history {id: regel} (objecten i.p.v. lijsten, zodat synchroniseren per regel kan;
+   verwijderen = deleted:true). Beide zijn privé (PRIV_FIELDS): een trainer ziet ze niet. */
+const EXAM_CATS=[["kihon","Kihon"],["syllabus","Syllabus"],["ippon","Ippon/sanbon kumite"],["renraku","Renraku's"],["kata","Kata's"],["kracht","Krachtoefeningen"],["inzet","Algemene inzet"],["kumite","Kumite"],["stamina","Stamina"]];
+const scoreLbl=n=>!n?"":n<=2?"Onvoldoende":n===3?"Voldoende":"Goed";
+const scoreCls=n=>!n?"":n<=2?"bad":n===3?"warn":"ok";
+const formsOf=s=>Object.values(s.examForms||{}).filter(f=>!f.deleted).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+const openFormOf=s=>formsOf(s).find(f=>!f.final&&f.to===targetOf(s));
+const histOf=s=>Object.values(s.history||{}).filter(x=>!x.deleted).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.updatedAt||0)-(a.updatedAt||0));
+function formStats(f){const v=EXAM_CATS.map(([k])=>+(f.scores||{})[k]||0).filter(Boolean);
+  return {done:v.length,all:EXAM_CATS.length,avg:v.length?v.reduce((a,b)=>a+b,0)/v.length:null,low:v.filter(x=>x<=2).length}}
+// Advies: geslaagd als alles beoordeeld is en niets onvoldoende; de examinator beslist zelf
+function formAdvice(f){const st=formStats(f);return st.done<st.all?null:st.low?"gezakt":"geslaagd"}
+const avgTxt=v=>v==null?"–":v.toFixed(1).replace(".",",");
+const exCur=()=>{const s=S.exForm&&S.students.find(x=>x.id===S.exForm.sid);const f=s&&(s.examForms||{})[S.exForm.fid];return f?{s,f}:null};
+async function saveForm(s,f){f.updatedAt=Date.now();s.examForms={...(s.examForms||{}),[f.id]:f};await Store.patch("students",s.id,{examForms:{[f.id]:clone(f)}})}
+async function addHistory(s,e){const id=uid();const x={id,date:e.date||today(),kind:e.kind||"handmatig",text:e.text||"",grade:e.grade||"",result:e.result||"",formId:e.formId||"",updatedAt:Date.now()};
+  s.history={...(s.history||{}),[id]:x};await Store.patch("students",s.id,{history:{[id]:x}});return x}
+// Graad één omhoog (ook gebruikt door "Uitslag verwerken" in de kandidatenlijst) + regel in de historie
+async function promote(s,date,{formId,note}={}){const nt=targetOf(s);if(!nt)return null;
+  const prog={...(s.progress||{})};const nn=ORDER[ORDER.indexOf(nt)+1];if(nn)Object.keys(prog).forEach(k=>{if(k.startsWith(nn+"_"))delete prog[k]});
+  const hid=uid();const hist={...(s.history||{}),[hid]:{id:hid,date,kind:"examen",grade:nt,result:"geslaagd",text:`Examen ${G[nt].name}: geslaagd${note?" ("+note+")":""}`,formId:formId||"",updatedAt:Date.now()}};
+  const doc={...clone(s),current:nt,lastExam:date,tussen:0,progress:prog,history:hist};delete doc.id;Object.assign(s,doc);await Store.put("students",s.id,doc);return nt}
+
+function vExamForm(){
+  const s=S.students.find(x=>x.id===S.exForm?.sid);const f=s&&(s.examForms||{})[S.exForm.fid];
+  if(!s||!f||f.deleted){S.exForm=null;return vExam()}
+  const ro=!!f.final;const st=formStats(f);const adv=formAdvice(f);const armed=S.confirm==="exf-"+f.id,armedD=S.confirm==="exd-"+f.id;
+  const dis=ro?"disabled":"";
+  return `<div class="stack exform">
+  <div class="panel stack">
+    <div class="row between"><button class="btn sm ghost" data-act="exClose">← Kandidaten</button>
+      <div class="row" style="gap:6px"><button class="btn sm" data-act="exPdf">Afdrukken (PDF)</button>${ro?"":`<button class="btn sm" data-act="exPdf" data-empty="1">Leeg formulier</button>`}</div></div>
+    <div class="row" style="flex-wrap:nowrap">${sbelt(s)}<div><h2>Beoordeling ${h(s.name)}</h2>
+      <div class="small muted row" style="gap:6px">${gradeName(f.from)} → ${belt(f.to)} <b>${G[f.to]?.name||""}</b></div></div></div>
+    ${ro?`<div class="pill ${f.result==="geslaagd"?"ok":"bad"}" style="align-self:flex-start;font-size:.85rem">Afgerond op ${fmtY(f.finalAt||f.date)} · ${f.result}</div>`:""}
+    <div class="fields"><label class="field"><span class="label">Examendatum</span><input type="date" id="exf-date" value="${h(f.date||"")}" data-ch="exField" data-f="date" ${dis}></label>
+      <label class="field" style="grid-column:span 2"><span class="label">Examinator(en)</span><input type="text" id="exf-exam" value="${h(f.examiner||"")}" data-ch="exField" data-f="examiner" ${dis} placeholder="naam"></label></div>
+    <div class="legend small muted">Score: 1–2 onvoldoende · 3 voldoende · 4–5 goed</div>
+  </div>
+  ${EXAM_CATS.map(([k,l])=>{const v=+(f.scores||{})[k]||0;return `<div class="panel exrow">
+    <div class="exhead"><h3>${l}</h3><span class="exscore" role="group" aria-label="Score ${l}">${[1,2,3,4,5].map(n=>`<button class="sc s${scoreCls(n)}" data-act="exScore" data-k="${k}" data-v="${n}" aria-pressed="${v===n}" ${dis}>${n}</button>`).join("")}</span>
+      <span class="exlbl ${scoreCls(v)}">${scoreLbl(v)||"nog niet beoordeeld"}</span></div>
+    <textarea id="exf-n-${k}" data-ch="exNote" data-k="${k}" placeholder="Opmerkingen ${l.toLowerCase()}" ${dis}>${h((f.notes||{})[k]||"")}</textarea></div>`}).join("")}
+  <div class="panel stack">
+    <h3>Eindconclusie</h3>
+    <div class="small">Beoordeeld: <b>${st.done} van ${st.all}</b> · gemiddeld <b>${avgTxt(st.avg)}</b>${st.low?` · <span style="color:var(--kiai);font-weight:700">${st.low} onvoldoende</span>`:""}${adv?` · advies: <b>${adv}</b>`:""}</div>
+    <div class="row" role="group" aria-label="Uitslag">${[["geslaagd","Geslaagd"],["gezakt","Gezakt"]].map(([v,t])=>`<button class="chip" data-act="exResult" data-v="${v}" aria-pressed="${f.result===v}" ${dis}>${t}</button>`).join("")}</div>
+    <textarea id="exf-remark" data-ch="exField" data-f="remark" placeholder="Toelichting bij de uitslag" ${dis}>${h(f.remark||"")}</textarea>
+    ${ro?"":`<div class="row">
+      <button class="btn ${armed?"danger armed":"primary"}" data-act="exFinal" ${st.done<st.all||!f.result?"disabled":""}>${armed?(f.result==="geslaagd"?`Klik nogmaals: afronden en ${s.name} naar ${G[f.to]?.name}`:"Klik nogmaals: afronden als gezakt"):"Afronden"}</button>
+      <button class="btn ${armedD?"danger armed":""}" data-act="exDel">${armedD?"Klik nogmaals om te verwijderen":"Formulier verwijderen"}</button></div>
+    <p class="small muted" style="margin:0">${st.done<st.all?"Geef eerst alle onderdelen een score. ":""}${!f.result?"Kies geslaagd of gezakt. ":""}Afronden zet de uitslag in de historie van de leerling. Bij geslaagd gaat de graad één omhoog (vorig examen = examendatum, tussenstrepen 0). Daarna is het formulier alleen nog te lezen en af te drukken.</p>`}
+  </div></div>`}
+
+function vHistory(s){const hs=histOf(s);const open=(S.secOpen||{}).historie!==false;const fs=formsOf(s);
+  return `<details class="panel sec" data-sec="historie" style="margin-top:14px" ${open?"open":""}><summary><h3>Historie</h3><span class="small muted">${hs.length?hs.length+" regel"+(hs.length===1?"":"s"):"nog leeg"}</span></summary>
+    <div class="stack" style="margin-top:10px;gap:8px">
+    ${hs.length?`<div class="list">${hs.map(x=>{const armed=S.confirm==="hd-"+x.id;const f=x.formId&&fs.find(y=>y.id===x.formId);
+      return `<div class="hrow"><span class="hd">${fmtY(x.date)}</span><span class="ht">${x.result?`<span class="pill ${x.result==="geslaagd"?"ok":"bad"}">${x.result}</span> `:""}${h(x.text)}</span>
+        <span class="row" style="gap:4px;flex-wrap:nowrap">${f?`<button class="btn sm" data-act="exOpen" data-id="${s.id}" data-f="${f.id}">Formulier</button>`:""}<button class="btn sm ghost danger ${armed?"armed":""}" data-act="histDel" data-id="${s.id}" data-h="${x.id}" aria-label="Regel verwijderen">${armed?"Zeker?":"✕"}</button></span></div>`}).join("")}</div>`:`<p class="small muted" style="margin:0">Nog niets vastgelegd. Afgeronde examenformulieren komen hier automatisch bij.</p>`}
+    <form class="hadd" data-form="histAdd" data-id="${s.id}"><input type="date" id="h-date" value="${today()}" aria-label="Datum">
+      <input type="text" id="h-text" placeholder="Bijv. examen 8e kyu geslaagd, zomerkamp, wedstrijd 2e plaats" aria-label="Omschrijving" required><button class="btn sm" type="submit">Toevoegen</button></form>
+    ${fs.filter(f=>f.final).length?`<span class="small muted">Examenformulieren: ${fs.filter(f=>f.final).map(f=>`<button class="btn sm ghost" data-act="exOpen" data-id="${s.id}" data-f="${f.id}">${fmtY(f.date)} · ${G[f.to]?.name||""}</button>`).join(" ")}</span>`:""}
+    </div></details>`}
+
+// Beoordelingsformulier als PDF (staand A4). empty: zonder scores en opmerkingen, om op papier in te vullen.
+async function buildExamPdf(s,f,empty){
+  const jsPDF=await loadJsPDF();const brand=await pdfBrand();const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  const W=210,H=297,M=12;const tx=drawBrand(doc,brand,M);
+  doc.setTextColor(20);doc.setFont("helvetica","bold");doc.setFontSize(16);doc.text("Examenbeoordeling",tx,M+3);
+  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(90);doc.text(dojoLabel()||"",tx,M+9);
+  let y=M+20;doc.setTextColor(20);doc.setFontSize(10);
+  const kv=(k,v,x,w)=>{doc.setFont("helvetica","bold");doc.text(k,x,y);doc.setFont("helvetica","normal");doc.text(doc.splitTextToSize(v||"",w)[0]||"",x+28,y);doc.setDrawColor(200);doc.line(x+28,y+1.2,x+w,y+1.2)};
+  kv("Naam",s.name,M,90);kv("Examendatum",empty?"":fmtY(f.date),M+96,90);y+=7;
+  kv("Van graad",gradeName(f.from),M,90);kv("Naar graad",G[f.to]?.name||"",M+96,90);y+=7;
+  kv("Examinator",empty?"":f.examiner,M,186);y+=8;
+  doc.setFontSize(8.5);doc.setTextColor(90);doc.text("Score per onderdeel: 1-2 onvoldoende  ·  3 voldoende  ·  4-5 goed",M,y);y+=4;
+  const cw=[46,40,100];const rh=empty?20:0;
+  doc.setFillColor(228,231,236);doc.rect(M,y,W-2*M,7,"F");doc.setTextColor(20);doc.setFont("helvetica","bold");doc.setFontSize(9);
+  doc.text("Onderdeel",M+1.5,y+4.8);doc.text("Score",M+cw[0]+cw[1]/2,y+4.8,{align:"center"});doc.text("Opmerkingen",M+cw[0]+cw[1]+1.5,y+4.8);y+=7;
+  for(const [k,l] of EXAM_CATS){const v=empty?0:+(f.scores||{})[k]||0;const note=empty?"":((f.notes||{})[k]||"");
+    doc.setFont("helvetica","normal");doc.setFontSize(9);const lines=doc.splitTextToSize(note,cw[2]-3);const h2=Math.max(empty?16:13.5,lines.length*4.2+5);
+    doc.setTextColor(20);doc.setFont("helvetica","bold");doc.text(l,M+1.5,y+6);
+    // vijf vakjes; de gekozen score gevuld
+    const bx=M+cw[0]+3;for(let n=1;n<=5;n++){const x=bx+(n-1)*7;if(v===n){const c=n<=2?[180,35,42]:n===3?[200,130,20]:[46,141,89];doc.setFillColor(...c);doc.rect(x,y+2,5.5,5.5,"F");doc.setTextColor(255)}else{doc.setDrawColor(150);doc.rect(x,y+2,5.5,5.5);doc.setTextColor(60)}
+      doc.setFontSize(8);doc.setFont("helvetica","bold");doc.text(String(n),x+2.75,y+5.9,{align:"center"})}
+    if(v){doc.setFontSize(7.5);doc.setFont("helvetica","normal");doc.setTextColor(90);doc.text(scoreLbl(v),bx+17.5,y+11,{align:"center"})}
+    doc.setTextColor(30);doc.setFont("helvetica","normal");doc.setFontSize(9);doc.text(lines,M+cw[0]+cw[1]+1.5,y+5.5);
+    doc.setDrawColor(215);doc.line(M,y+h2,W-M,y+h2);y+=h2}
+  y+=6;const st=formStats(f);doc.setTextColor(20);doc.setFont("helvetica","bold");doc.setFontSize(12);doc.text("Eindconclusie",M,y);y+=6;
+  doc.setFontSize(10);doc.setFont("helvetica","normal");
+  if(empty){doc.text("Geslaagd  /  Gezakt   (doorhalen wat niet van toepassing is)",M,y);y+=6}
+  else{doc.text(`Gemiddelde score: ${avgTxt(st.avg)}${st.low?`   ·   ${st.low} onderdeel/onderdelen onvoldoende`:""}`,M,y);y+=6;
+    doc.setFont("helvetica","bold");doc.setFontSize(13);const r=f.result||"–";doc.setTextColor(...(r==="geslaagd"?[46,141,89]:r==="gezakt"?[180,35,42]:[20,20,20]));doc.text(r.toUpperCase(),M,y+1);doc.setTextColor(20);y+=7}
+  doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(90);doc.text("Toelichting",M,y);y+=2;doc.setTextColor(20);
+  doc.setFontSize(9.5);const rl=doc.splitTextToSize(empty?"":(f.remark||""),W-2*M);
+  doc.setDrawColor(200);doc.rect(M,y,W-2*M,Math.max(22,rl.length*4.4+6));doc.text(rl,M+2,y+5);y+=Math.max(22,rl.length*4.4+6)+12;
+  if(y>H-20){doc.addPage();y=M+10}
+  doc.setFontSize(9);doc.setTextColor(60);doc.text("Handtekening examinator",M,y);doc.text("Handtekening leerling / ouder",M+96,y);
+  doc.setDrawColor(150);doc.line(M,y+12,M+80,y+12);doc.line(M+96,y+12,W-M,y+12);
+  doc.setFontSize(7.5);doc.setTextColor(110);doc.text(`Gemaakt met ${APP.name} op ${fmtY(today())}`,M,H-8);
+  return doc.output("arraybuffer")}
 
 /* ---------- Registratielijst (PDF) ---------- */
 let jspdfP=null;
@@ -1617,6 +1742,9 @@ function mergeRecord(c,local,inc){
   const out={...clone(older),...clone(newer)};
   if(c==="attendance"&&(older.present||newer.present))out.present={...(older.present||{}),...(newer.present||{})};
   if(c==="students"&&(older.progress||newer.progress))out.progress={...(older.progress||{}),...(newer.progress||{})};
+  // historie en examenformulieren per regel samenvoegen; per regel wint de nieuwste
+  if(c==="students")for(const k of ["history","examForms"])if(older[k]||newer[k]){const o={...clone(older[k]||{})};
+    for(const [id,v] of Object.entries(newer[k]||{}))if(!o[id]||(+v.updatedAt||0)>=(+o[id].updatedAt||0))o[id]=clone(v);out[k]=o}
   out.updatedAt=Math.max(lt,it);return out}
 function planMerge(inc){
   const plan={put:[],del:[],settings:null,counts:{nieuw:0,bijgewerkt:0,verwijderd:0}};
@@ -1903,6 +2031,29 @@ function setProg(sid,item,v){
   Store.patch("students",sid,{progress:{[item]:v}});
 }
 const ACT={
+  // Examenbeoordeling: openen (nieuw formulier voor het volgende examen als er nog geen open formulier is)
+  exOpen:async el=>{const s=S.students.find(x=>x.id===el.dataset.id);if(!s)return;let fid=el.dataset.f;
+    if(!fid){let f=openFormOf(s);if(!f){const t=targetOf(s);if(!t)return toast("Deze leerling heeft geen volgend examen.");
+      f={id:uid(),from:s.current||"0",to:t,date:S.settings.examDate||today(),examiner:"",scores:{},notes:{},result:"",remark:"",final:false};await saveForm(s,f)}fid=f.id}
+    S.exForm={sid:s.id,fid};S.confirm=null;S.tab="examen";render();window.scrollTo({top:0})},
+  exClose:()=>{S.exForm=null;S.confirm=null;render();window.scrollTo({top:0})},
+  exScore:el=>{const c=exCur();if(!c||c.f.final)return;const k=el.dataset.k,v=+el.dataset.v;c.f.scores={...(c.f.scores||{}),[k]:(+c.f.scores?.[k]===v?0:v)};S.confirm=null;saveForm(c.s,c.f);render()},
+  exResult:el=>{const c=exCur();if(!c||c.f.final)return;c.f.result=c.f.result===el.dataset.v?"":el.dataset.v;S.confirm=null;saveForm(c.s,c.f);render()},
+  exFinal:async()=>{const c=exCur();if(!c||c.f.final)return;const {s,f}=c;const st=formStats(f);if(st.done<st.all||!f.result)return;
+    if(S.confirm!=="exf-"+f.id){S.confirm="exf-"+f.id;render();return}S.confirm=null;
+    const note=`gem. ${avgTxt(st.avg)}`;f.final=true;f.finalAt=today();await saveForm(s,f);
+    if(f.result==="geslaagd"){if(targetOf(s)===f.to)await promote(s,f.date||today(),{formId:f.id,note});else await addHistory(s,{date:f.date,kind:"examen",grade:f.to,result:"geslaagd",text:`Examen ${G[f.to]?.name}: geslaagd (${note})`,formId:f.id});
+      toast(`${s.name} is geslaagd voor ${G[f.to]?.name}. De graad is bijgewerkt.`)}
+    else{await addHistory(s,{date:f.date,kind:"examen",grade:f.to,result:"gezakt",text:`Examen ${G[f.to]?.name}: gezakt (${note})`,formId:f.id});toast("Uitslag vastgelegd in de historie.")}
+    render()},
+  exDel:async()=>{const c=exCur();if(!c||c.f.final)return;if(S.confirm!=="exd-"+c.f.id){S.confirm="exd-"+c.f.id;render();return}S.confirm=null;
+    c.f.deleted=true;await saveForm(c.s,c.f);S.exForm=null;render();toast("Formulier verwijderd.")},
+  exPdf:async el=>{const c=exCur();if(!c)return;const empty=el.dataset.empty==="1";toast("PDF wordt gemaakt…");
+    try{const buf=await buildExamPdf(c.s,c.f,empty);await offerFile(`Examenbeoordeling ${c.s.name}${empty?" (leeg)":""} ${G[c.f.to]?.name||""}.pdf`,buf)}
+    catch(e){console.warn(e);toast("De PDF-module kon niet laden. Controleer de internetverbinding.")}},
+  histDel:async el=>{const s=S.students.find(x=>x.id===el.dataset.id);const x=s&&(s.history||{})[el.dataset.h];if(!x)return;
+    if(S.confirm!=="hd-"+x.id){S.confirm="hd-"+x.id;render();return}S.confirm=null;
+    const y={...x,deleted:true,updatedAt:Date.now()};s.history={...s.history,[x.id]:y};await Store.patch("students",s.id,{history:{[x.id]:y}});render()},
   rtOpen:()=>openRT(),
   rtClose:()=>closeRT(),
   rtStart:()=>rtStart(),
@@ -2010,9 +2161,7 @@ const ACT={
     const ids=(S.passSel||[]).filter(id=>{const s=S.students.find(x=>x.id===id);return s&&!s.archived&&targetOf(s)});if(!ids.length)return;
     if(S.confirm!=="pass"){S.confirm="pass";render();return}S.confirm=null;
     const ex=S.settings.examDate||"";const date=S.resultDate||(ex&&ex<=today()?ex:today());
-    for(const id of ids){const s=S.students.find(x=>x.id===id);const nt=targetOf(s);if(!nt)continue;
-      const prog={...(s.progress||{})};const nn=ORDER[ORDER.indexOf(nt)+1];if(nn)Object.keys(prog).forEach(k=>{if(k.startsWith(nn+"_"))delete prog[k]});
-      const doc={...clone(s),current:nt,lastExam:date,tussen:0,progress:prog};delete doc.id;Object.assign(s,doc);await Store.put("students",id,doc)}
+    for(const id of ids){const s=S.students.find(x=>x.id===id);if(s)await promote(s,date)}
     S.passSel=[];render();toast(`${ids.length} leerling${ids.length===1?"":"en"} bijgewerkt naar de nieuwe graad.`)},
   sfilter:el=>{S.studentFilter=el.dataset.v;S.selStudent=null;render()},
   sarchive:el=>{const s=S.students.find(x=>x.id===el.dataset.id);if(!s)return;const a=!s.archived;const p={archived:a,archivedAt:a?today():""};Object.assign(s,p);
@@ -2053,6 +2202,8 @@ const IN={
   block:el=>{S.draft.blocks[+el.dataset.b][el.dataset.f]=el.value;touchDraft(false)}
 };
 const CH={
+  exField:el=>{const c=exCur();if(!c||c.f.final)return;c.f[el.dataset.f]=el.value;saveForm(c.s,c.f)},
+  exNote:el=>{const c=exCur();if(!c||c.f.final)return;c.f.notes={...(c.f.notes||{}),[el.dataset.k]:el.value};saveForm(c.s,c.f)},
   rtCfg:()=>{if(!RT)return;const s=$("#rt-sum");if(s)s.textContent=rtSummary(rtReadCfg())},
   sfield:el=>{const f=el.dataset.f;let v=el.value;if(f==="birthYear")v=v?+v:"";if(f==="tussen")v=+v||0;if(["birthPlace","ifkNumber","nkaNumber"].includes(f))v=v.trim();if(f==="name"&&!v.trim())return;const s=S.students.find(x=>x.id===el.dataset.id);if(s)s[f]=v;
     const p={[f]:v};if(f==="birthDate"){p.birthYear=v?+v.slice(0,4):"";if(s)s.birthYear=p.birthYear}if(f==="current"){S.progGrade=null;if(s&&s.tussen){s.tussen=0;p.tussen=0}}Store.patch("students",el.dataset.id,p);requestRender()},
@@ -2120,6 +2271,8 @@ const CH={
   djTick:el=>{const b=S.draft.blocks[S.dojo.i];b.items[+el.dataset.i].done=el.checked;touchDraft()}
 };
 const FORM={
+  histAdd:async el=>{const s=S.students.find(x=>x.id===el.dataset.id);const t=($("#h-text")?.value||"").trim();if(!s||!t)return;
+    await addHistory(s,{date:$("#h-date")?.value||today(),text:t,kind:"handmatig"});render();toast("Toegevoegd aan de historie.")},
   addStudent:()=>{const n=$("#ns-name").value.trim();const ln=($("#ns-last")?.value||"").trim();if(!n)return;if(S.readOnly)return toast("Je kunt deze planner alleen bekijken.");const id=uid();
     Store.put("students",id,{name:(n+" "+ln).trim(),firstName:n,lastName:ln,current:$("#ns-grade").value,lastExam:"",birthYear:"",notes:"",progress:{},createdAt:Date.now()});S.selStudent=id;S.progGrade=null;render();const f=$("#ns-name");if(f)f.value=""},
   clAdd:async()=>{const email=($("#cl-new-email")?.value||"").trim();if(!/^\S+@\S+\.\S+$/.test(email))return toast("Vul een geldig e-mailadres in.");
