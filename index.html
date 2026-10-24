@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.10.2"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.10.3"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +308,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.10.2",date:"2026-10-24",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.10.3",date:"2026-10-24",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -1244,7 +1244,7 @@ function vExam(){
     const candBand=s=>{const st=attStats(s);return st.pct==null?"bad":bandOf(st.pct*100)};const CF=S.candFilter||["ok"];
     const allC=gs.flatMap(({studs})=>studs);const cnt=b=>allC.filter(s=>candBand(s)===b).length;
     const cfChips=`<div class="row" role="group" aria-label="Filter op aanwezigheid"><span class="label">Aanwezigheid</span>${[["ok","Voldoet"],["talk","Bespreken"],["bad","Voldoet niet"]].map(([v,l])=>`<button class="chip" data-act="candFilter" data-v="${v}" aria-pressed="${CF.includes(v)}">${l} (${cnt(v)})</button>`).join("")}</div>`;
-    const cands=allC.filter(s=>CF.includes(candBand(s))).map(s=>({s,el:eligibility(s,ex)})).sort(cs==="naam"?(a,b)=>nm(a.s,b.s):cs==="graad"?(a,b)=>gi(b.s)-gi(a.s)||nm(a.s,b.s):(a,b)=>EL_ORDER[a.el.state]-EL_ORDER[b.el.state]||gi(b.s)-gi(a.s)||nm(a.s,b.s)).map(x=>x.s);const passSel=new Set((S.passSel||[]).filter(id=>cands.some(s=>s.id===id)));
+    const cands=examCandList();const passSel=new Set((S.passSel||[]).filter(id=>cands.some(s=>s.id===id)));
     const rd=S.resultDate||(ex&&ex<=today()?ex:today());const armedP=S.confirm==="pass";
     html+=`<div class="row between"><h2>Kandidaten</h2><div class="row" role="group" aria-label="Sorteren"><span class="label">Sorteren op</span>${[["status","Status"],["graad","Graad"],["naam","Naam"]].map(([v,l])=>`<button class="chip" data-act="candSort" data-v="${v}" aria-pressed="${cs===v}">${l}</button>`).join("")}</div></div>${cfChips}
       ${cands.length?"":`<div class="panel flat empty small">Geen kandidaten met deze aanwezigheid. Zet hierboven een filter aan.</div>`}<div class="tablewrap" ${cands.length?"":"hidden"}><table><thead><tr><th class="c">Geslaagd</th><th>Leerling</th><th>Beoordeling</th><th>Examen naar</th><th>Klaar</th><th>Aanwezig</th><th>Toelating</th></tr></thead><tbody>${cands.map(s=>{const t=targetOf(s);const el=eligibility(s,ex);const st=attStats(s);
@@ -1456,18 +1456,38 @@ async function promote(s,date,{formId,note}={}){const nt=targetOf(s);if(!nt)retu
   const hid=uid();const hist={...(s.history||{}),[hid]:{id:hid,date,kind:"examen",grade:nt,result:"geslaagd",text:`Examen ${G[nt].name}: geslaagd${note?" ("+note+")":""}`,formId:formId||"",updatedAt:Date.now()}};
   const doc={...clone(s),current:nt,lastExam:date,tussen:0,progress:prog,history:hist};delete doc.id;Object.assign(s,doc);await Store.put("students",s.id,doc);return nt}
 
+// Kandidatenlijst zoals op het tabblad Examen (filter op aanwezigheid + gekozen sortering); ook links naast het formulier
+const candBandOf=s=>{const st=attStats(s);return st.pct==null?"bad":bandOf(st.pct*100)};
+function examCandList(){const ex=S.settings.examDate||"";const CF=S.candFilter||["ok"];const cs=S.candSort||"status";
+  const EL_ORDER={ok:0,warn:1,bad:2};const gi=s=>s.current&&s.current!=="0"?ORDER.indexOf(s.current):-1;
+  const nm=(a,b)=>firstOf(a).localeCompare(firstOf(b),"nl",{numeric:true})||lastOf(a).localeCompare(lastOf(b),"nl",{numeric:true});
+  return groups().flatMap(({studs})=>studs).filter(s=>CF.includes(candBandOf(s))).map(s=>({s,el:eligibility(s,ex)}))
+    .sort(cs==="naam"?(a,b)=>nm(a.s,b.s):cs==="graad"?(a,b)=>gi(b.s)-gi(a.s)||nm(a.s,b.s):(a,b)=>EL_ORDER[a.el.state]-EL_ORDER[b.el.state]||gi(b.s)-gi(a.s)||nm(a.s,b.s)).map(x=>x.s)}
+function exStatusOf(s){const f=openFormOf(s);if(f){const st=formStats(f);return `<span class="small muted">${st.done}/${st.all}</span>`}
+  const last=formsOf(s).find(x=>x.final);return last&&last.to===s.current?`<span class="pill ok">geslaagd</span>`:last&&last.result==="gezakt"&&last.to===targetOf(s)?`<span class="pill bad">gezakt</span>`:""}
 function vExamForm(){
   const s=S.students.find(x=>x.id===S.exForm?.sid);const f=s&&(s.examForms||{})[S.exForm.fid];
   if(!s||!f||f.deleted){S.exForm=null;return vExam()}
+  // Links de kandidaten (wisselen zonder terug te gaan), rechts het formulier. Een net geslaagde leerling blijft in de lijst staan.
+  let list=examCandList();if(!list.some(x=>x.id===s.id))list=[...list,s];
+  const ix=list.findIndex(x=>x.id===s.id),prev=list[ix-1],next=list[ix+1];
+  return `<div class="grid2 has-sel"><div class="listcol stack"><div class="panel" style="padding:0"><div style="padding:10px 10px 4px" class="label">Kandidaten (${list.length})</div><div class="list">
+    ${list.map(x=>`<button class="li" data-act="exOpen" data-id="${x.id}" aria-current="${x.id===s.id}">${sbelt(x)}<span class="grow"><span class="name">${h(x.name)}</span><span class="small muted">naar ${G[x.id===s.id?f.to:targetOf(x)]?.name||"–"}</span></span>${exStatusOf(x)}</button>`).join("")}</div></div></div>
+    <div class="detailcol">${vExamFormBody(s,f,prev,next,ix,list.length)}</div></div>`}
+function vExamFormBody(s,f,prev,next,ix,n){
   const ro=!!f.final;const st=formStats(f);const adv=formAdvice(f);const armed=S.confirm==="exf-"+f.id,armedD=S.confirm==="exd-"+f.id;
   const dis=ro?"disabled":"";
   return `<div class="stack exform">
   <div class="panel stack">
     <div class="row between"><button class="btn sm ghost" data-act="exClose">← Kandidaten</button>
-      <div class="row" style="gap:6px"><button class="btn sm" data-act="exPdf">Afdrukken (PDF)</button>${ro?"":`<button class="btn sm" data-act="exPdf" data-empty="1">Leeg formulier</button>`}</div></div>
+      <div class="row" style="gap:6px;margin-left:auto">${n>1?`<span class="small muted" style="font-variant-numeric:tabular-nums">${ix+1} van ${n}</span>
+        <button class="btn sm" data-act="exOpen" data-id="${prev?prev.id:""}" ${prev?"":"disabled"} title="${prev?h(prev.name):""}">← Vorige</button>
+        <button class="btn sm" data-act="exOpen" data-id="${next?next.id:""}" ${next?"":"disabled"} title="${next?h(next.name):""}">Volgende →</button>`:""}</div></div>
+    <div class="row" style="gap:6px"><button class="btn sm" data-act="exPdf">Afdrukken (PDF)</button>${ro?"":`<button class="btn sm" data-act="exPdf" data-empty="1">Leeg formulier</button>`}</div>
     <div class="row" style="flex-wrap:nowrap">${sbelt(s)}<div><h2>Beoordeling ${h(s.name)}</h2>
       <div class="small muted row" style="gap:6px">${gradeName(f.from)} → ${belt(f.to)} <b>${G[f.to]?.name||""}</b></div></div></div>
     ${ro?`<div class="row"><span class="pill ${f.result==="geslaagd"?"ok":"bad"}" style="font-size:.85rem">Afgerond op ${fmtY(f.finalAt||f.date)} · ${f.result}</span>
+      ${targetOf(s)?`<button class="btn sm" data-act="exOpen" data-id="${s.id}" data-new="1">Nieuw formulier (${G[targetOf(s)].name})</button>`:""}
       <button class="btn sm ${S.confirm==="exu-"+f.id?"danger armed":""}" data-act="exUndo">${S.confirm==="exu-"+f.id?(f.result==="geslaagd"?`Klik nogmaals: terug naar ${gradeName(f.prev?.current||f.from)}`:"Klik nogmaals: ongedaan maken"):"Afronding ongedaan maken"}</button></div>`:""}
     <div class="fields"><label class="field"><span class="label">Examendatum</span><input type="date" id="exf-date" value="${h(f.date||"")}" data-ch="exField" data-f="date" ${dis}></label>
       <label class="field" style="grid-column:span 2"><span class="label">Examinator(en)</span><input type="text" id="exf-exam" value="${h(f.examiner||"")}" data-ch="exField" data-f="examiner" ${dis} placeholder="naam"></label></div>
@@ -2039,6 +2059,8 @@ function setProg(sid,item,v){
 const ACT={
   // Examenbeoordeling: openen (nieuw formulier voor het volgende examen als er nog geen open formulier is)
   exOpen:async el=>{const s=S.students.find(x=>x.id===el.dataset.id);if(!s)return;let fid=el.dataset.f;
+    // Geen open formulier, maar net (≤ 60 dagen) een examen afgerond? Dan dat formulier tonen; "Nieuw formulier" staat erop.
+    if(!fid&&!el.dataset.new&&!openFormOf(s)){const last=formsOf(s).find(x=>x.final);if(last&&daysBetween(last.date||last.finalAt,today())<=60)fid=last.id}
     if(!fid){let f=openFormOf(s);if(!f){const t=targetOf(s);if(!t)return toast("Deze leerling heeft geen volgend examen.");
       f={id:uid(),from:s.current||"0",to:t,date:S.settings.examDate||today(),examiner:"",scores:{},notes:{},result:"",remark:"",final:false};await saveForm(s,f)}fid=f.id}
     S.exForm={sid:s.id,fid};S.confirm=null;S.tab="examen";render();window.scrollTo({top:0})},
