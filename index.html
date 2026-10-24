@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.10.0"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="author" content="Robert Ytsma"><meta name="generator" content="Dojo Assistant 1.10.2"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#B5262B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Dojo Assistant"><meta name="apple-mobile-web-app-status-bar-style" content="default"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,'Segoe UI',sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Dojo Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +308,7 @@ a{color:var(--accent)}
 
 <script>
 /* ============ APP-INFO ============ */
-const APP={name:"Dojo Assistant",version:"1.10.0",date:"2026-10-24",author:"Robert Ytsma"};
+const APP={name:"Dojo Assistant",version:"1.10.2",date:"2026-10-24",author:"Robert Ytsma"};
 
 /* ============ EXAMENPROGRAMMA NKA-IFK (bron: nka-ifk.nl/examen) ============ */
 const CAT_LABEL={alg:"Algemeen",kwal:"Kwalificaties kandidaat",std:"Standen",sto:"Stoten en slagen",blk:"Blokkeringen",trp:"Trappen",kata:"Kata",kum:"Kumite",ren:"Renraku / ippon / sanbon kumite",adem:"Ademhaling",tame:"Tameshiwari",oef:"Conditie-oefeningen"};
@@ -1240,12 +1240,17 @@ function vExam(){
     const EL_ORDER={ok:0,warn:1,bad:2};const gi=s=>s.current&&s.current!=="0"?ORDER.indexOf(s.current):-1;
     const nm=(a,b)=>firstOf(a).localeCompare(firstOf(b),"nl",{numeric:true})||lastOf(a).localeCompare(lastOf(b),"nl",{numeric:true});
     const cs=S.candSort||"status";
-    const cands=gs.flatMap(({studs})=>studs).map(s=>({s,el:eligibility(s,ex)})).sort(cs==="naam"?(a,b)=>nm(a.s,b.s):cs==="graad"?(a,b)=>gi(b.s)-gi(a.s)||nm(a.s,b.s):(a,b)=>EL_ORDER[a.el.state]-EL_ORDER[b.el.state]||gi(b.s)-gi(a.s)||nm(a.s,b.s)).map(x=>x.s);const passSel=new Set((S.passSel||[]).filter(id=>cands.some(s=>s.id===id)));
+    // Filter op aanwezigheid (voldoet / bespreken / voldoet niet); zonder ingevoerde lessen telt als "voldoet niet"
+    const candBand=s=>{const st=attStats(s);return st.pct==null?"bad":bandOf(st.pct*100)};const CF=S.candFilter||["ok"];
+    const allC=gs.flatMap(({studs})=>studs);const cnt=b=>allC.filter(s=>candBand(s)===b).length;
+    const cfChips=`<div class="row" role="group" aria-label="Filter op aanwezigheid"><span class="label">Aanwezigheid</span>${[["ok","Voldoet"],["talk","Bespreken"],["bad","Voldoet niet"]].map(([v,l])=>`<button class="chip" data-act="candFilter" data-v="${v}" aria-pressed="${CF.includes(v)}">${l} (${cnt(v)})</button>`).join("")}</div>`;
+    const cands=allC.filter(s=>CF.includes(candBand(s))).map(s=>({s,el:eligibility(s,ex)})).sort(cs==="naam"?(a,b)=>nm(a.s,b.s):cs==="graad"?(a,b)=>gi(b.s)-gi(a.s)||nm(a.s,b.s):(a,b)=>EL_ORDER[a.el.state]-EL_ORDER[b.el.state]||gi(b.s)-gi(a.s)||nm(a.s,b.s)).map(x=>x.s);const passSel=new Set((S.passSel||[]).filter(id=>cands.some(s=>s.id===id)));
     const rd=S.resultDate||(ex&&ex<=today()?ex:today());const armedP=S.confirm==="pass";
-    html+=`<div class="row between"><h2>Kandidaten</h2><div class="row" role="group" aria-label="Sorteren"><span class="label">Sorteren op</span>${[["status","Status"],["graad","Graad"],["naam","Naam"]].map(([v,l])=>`<button class="chip" data-act="candSort" data-v="${v}" aria-pressed="${cs===v}">${l}</button>`).join("")}</div></div><div class="tablewrap"><table><thead><tr><th class="c">Geslaagd</th><th>Leerling</th><th>Examen naar</th><th>Klaar</th><th>Aanwezig</th><th>Toelating</th><th>Beoordeling</th></tr></thead><tbody>${cands.map(s=>{const t=targetOf(s);const el=eligibility(s,ex);const st=attStats(s);
-      return `<tr><td class="c"><input type="checkbox" id="pass-${s.id}" data-ch="passSel" data-id="${s.id}" ${passSel.has(s.id)?"checked":""} aria-label="${h(s.name)} geslaagd"></td><td><button class="btn ghost sm" data-act="goStudent" data-id="${s.id}">${h(s.name)}</button></td><td style="white-space:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap">${belt(t)}${G[t].name}</span></td><td style="min-width:120px"><div class="row" style="flex-wrap:nowrap">${barH(readiness(s))}<span class="small">${pct(readiness(s))}</span></div></td><td class="small" style="white-space:nowrap">${attPill(st)}</td>
-      <td class="small">${eligPill(el)}${el.notes.length?`<div class="muted" style="margin-top:3px">${h(el.notes.join(" · "))}</div>`:""}</td>
-      <td style="white-space:nowrap">${(()=>{const f=openFormOf(s);const fs=f?formStats(f):null;return `<button class="btn sm ${f?"":"primary"}" data-act="exOpen" data-id="${s.id}">${f?`Verder (${fs.done}/${fs.all})`:"Beoordelen"}</button>`})()}</td></tr>`}).join("")}</tbody></table></div>
+    html+=`<div class="row between"><h2>Kandidaten</h2><div class="row" role="group" aria-label="Sorteren"><span class="label">Sorteren op</span>${[["status","Status"],["graad","Graad"],["naam","Naam"]].map(([v,l])=>`<button class="chip" data-act="candSort" data-v="${v}" aria-pressed="${cs===v}">${l}</button>`).join("")}</div></div>${cfChips}
+      ${cands.length?"":`<div class="panel flat empty small">Geen kandidaten met deze aanwezigheid. Zet hierboven een filter aan.</div>`}<div class="tablewrap" ${cands.length?"":"hidden"}><table><thead><tr><th class="c">Geslaagd</th><th>Leerling</th><th>Beoordeling</th><th>Examen naar</th><th>Klaar</th><th>Aanwezig</th><th>Toelating</th></tr></thead><tbody>${cands.map(s=>{const t=targetOf(s);const el=eligibility(s,ex);const st=attStats(s);
+      return `<tr><td class="c"><input type="checkbox" id="pass-${s.id}" data-ch="passSel" data-id="${s.id}" ${passSel.has(s.id)?"checked":""} aria-label="${h(s.name)} geslaagd"></td><td><button class="btn ghost sm" data-act="goStudent" data-id="${s.id}">${h(s.name)}</button></td>
+      <td style="white-space:nowrap">${(()=>{const f=openFormOf(s);const fs=f?formStats(f):null;return `<button class="btn sm ${f?"":"primary"}" data-act="exOpen" data-id="${s.id}">${f?`Verder (${fs.done}/${fs.all})`:"Beoordelen"}</button>`})()}</td><td style="white-space:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap">${belt(t)}${G[t].name}</span></td><td style="min-width:120px"><div class="row" style="flex-wrap:nowrap">${barH(readiness(s))}<span class="small">${pct(readiness(s))}</span></div></td><td class="small" style="white-space:nowrap">${attPill(st)}</td>
+      <td class="small">${eligPill(el)}${el.notes.length?`<div class="muted" style="margin-top:3px">${h(el.notes.join(" · "))}</div>`:""}</td></tr>`}).join("")}</tbody></table></div>
     <div class="panel stack" style="gap:10px">
       <div class="row between"><h3>Examenuitslag verwerken</h3><span class="small muted">${passSel.size} geslaagd aangevinkt</span></div>
       <div class="row" style="align-items:flex-end">
@@ -1462,7 +1467,8 @@ function vExamForm(){
       <div class="row" style="gap:6px"><button class="btn sm" data-act="exPdf">Afdrukken (PDF)</button>${ro?"":`<button class="btn sm" data-act="exPdf" data-empty="1">Leeg formulier</button>`}</div></div>
     <div class="row" style="flex-wrap:nowrap">${sbelt(s)}<div><h2>Beoordeling ${h(s.name)}</h2>
       <div class="small muted row" style="gap:6px">${gradeName(f.from)} → ${belt(f.to)} <b>${G[f.to]?.name||""}</b></div></div></div>
-    ${ro?`<div class="pill ${f.result==="geslaagd"?"ok":"bad"}" style="align-self:flex-start;font-size:.85rem">Afgerond op ${fmtY(f.finalAt||f.date)} · ${f.result}</div>`:""}
+    ${ro?`<div class="row"><span class="pill ${f.result==="geslaagd"?"ok":"bad"}" style="font-size:.85rem">Afgerond op ${fmtY(f.finalAt||f.date)} · ${f.result}</span>
+      <button class="btn sm ${S.confirm==="exu-"+f.id?"danger armed":""}" data-act="exUndo">${S.confirm==="exu-"+f.id?(f.result==="geslaagd"?`Klik nogmaals: terug naar ${gradeName(f.prev?.current||f.from)}`:"Klik nogmaals: ongedaan maken"):"Afronding ongedaan maken"}</button></div>`:""}
     <div class="fields"><label class="field"><span class="label">Examendatum</span><input type="date" id="exf-date" value="${h(f.date||"")}" data-ch="exField" data-f="date" ${dis}></label>
       <label class="field" style="grid-column:span 2"><span class="label">Examinator(en)</span><input type="text" id="exf-exam" value="${h(f.examiner||"")}" data-ch="exField" data-f="examiner" ${dis} placeholder="naam"></label></div>
     <div class="legend small muted">Score: 1–2 onvoldoende · 3 voldoende · 4–5 goed</div>
@@ -2041,11 +2047,29 @@ const ACT={
   exResult:el=>{const c=exCur();if(!c||c.f.final)return;c.f.result=c.f.result===el.dataset.v?"":el.dataset.v;S.confirm=null;saveForm(c.s,c.f);render()},
   exFinal:async()=>{const c=exCur();if(!c||c.f.final)return;const {s,f}=c;const st=formStats(f);if(st.done<st.all||!f.result)return;
     if(S.confirm!=="exf-"+f.id){S.confirm="exf-"+f.id;render();return}S.confirm=null;
-    const note=`gem. ${avgTxt(st.avg)}`;f.final=true;f.finalAt=today();await saveForm(s,f);
-    if(f.result==="geslaagd"){if(targetOf(s)===f.to)await promote(s,f.date||today(),{formId:f.id,note});else await addHistory(s,{date:f.date,kind:"examen",grade:f.to,result:"geslaagd",text:`Examen ${G[f.to]?.name}: geslaagd (${note})`,formId:f.id});
-      toast(`${s.name} is geslaagd voor ${G[f.to]?.name}. De graad is bijgewerkt.`)}
-    else{await addHistory(s,{date:f.date,kind:"examen",grade:f.to,result:"gezakt",text:`Examen ${G[f.to]?.name}: gezakt (${note})`,formId:f.id});toast("Uitslag vastgelegd in de historie.")}
+    const date=f.date||today();
+    // Examendatum in de toekomst zou "vorig examen" in de toekomst zetten: dan telt er geen enkele les meer mee voor de aanwezigheid
+    if(date>today())return toast("De examendatum ligt in de toekomst. Zet de examendatum op de dag van het examen en rond dan af.");
+    const note=`gem. ${avgTxt(st.avg)}`;const pass=f.result==="geslaagd"&&targetOf(s)===f.to;
+    // Alles in één keer opslaan (formulier, historie en graad), met de oude stand erbij zodat afronden ongedaan kan worden
+    f.prev={current:s.current||"0",lastExam:s.lastExam||"",tussen:+s.tussen||0,progress:clone(s.progress||{})};
+    f.final=true;f.finalAt=today();f.updatedAt=Date.now();
+    const hid=uid();const hist={...(s.history||{}),[hid]:{id:hid,date,kind:"examen",grade:f.to,result:f.result,text:`Examen ${G[f.to]?.name}: ${f.result} (${note})`,formId:f.id,updatedAt:Date.now()}};
+    const doc={...clone(s),examForms:{...(s.examForms||{}),[f.id]:clone(f)},history:hist};delete doc.id;
+    if(pass){const prog={...(s.progress||{})};const nn=ORDER[ORDER.indexOf(f.to)+1];if(nn)Object.keys(prog).forEach(k=>{if(k.startsWith(nn+"_"))delete prog[k]});
+      Object.assign(doc,{current:f.to,lastExam:date,tussen:0,progress:prog})}
+    Object.assign(s,doc);await Store.put("students",s.id,doc);
+    toast(pass?`${s.name} is geslaagd voor ${G[f.to]?.name}. Graad en "vorig examen" zijn bijgewerkt.`:"Uitslag vastgelegd in de historie.");
     render()},
+  // Afronden terugdraaien: oude graad, vorig examen, tussenstrepen en voortgang terug; historieregel weg; formulier weer bewerkbaar
+  exUndo:async()=>{const c=exCur();if(!c||!c.f.final)return;const {s,f}=c;
+    if(f.result==="geslaagd"&&f.prev&&s.current!==f.to)return toast("Deze leerling heeft inmiddels een andere graad; terugdraaien kan niet meer.");
+    if(S.confirm!=="exu-"+f.id){S.confirm="exu-"+f.id;render();return}S.confirm=null;
+    const doc=clone(s);delete doc.id;
+    if(f.result==="geslaagd"&&f.prev)Object.assign(doc,{current:f.prev.current,lastExam:f.prev.lastExam,tussen:f.prev.tussen,progress:f.prev.progress});
+    for(const x of Object.values(doc.history||{}))if(x.formId===f.id&&!x.deleted){x.deleted=true;x.updatedAt=Date.now()}
+    const nf={...clone(f),final:false,finalAt:"",updatedAt:Date.now()};delete nf.prev;doc.examForms={...(doc.examForms||{}),[f.id]:nf};
+    Object.assign(s,doc);await Store.put("students",s.id,doc);toast("Afronding ongedaan gemaakt.");render()},
   exDel:async()=>{const c=exCur();if(!c||c.f.final)return;if(S.confirm!=="exd-"+c.f.id){S.confirm="exd-"+c.f.id;render();return}S.confirm=null;
     c.f.deleted=true;await saveForm(c.s,c.f);S.exForm=null;render();toast("Formulier verwijderd.")},
   exPdf:async el=>{const c=exCur();if(!c)return;const empty=el.dataset.empty==="1";toast("PDF wordt gemaakt…");
@@ -2127,6 +2151,7 @@ const ACT={
   repToggle:()=>{S.repShow=!S.repShow;render()},
   repPdf:async()=>{S.repBusy=true;render();try{const {from,to}=repPeriod();const buf=await buildRepPdf();await offerFile(`Aanwezigheidsrapport ${fmtNL(from)} tm ${fmtNL(to)}.pdf`,buf)}
     catch(e){toast("De PDF-module kon niet laden. Controleer de internetverbinding.");console.warn(e)}finally{S.repBusy=false;render()}},
+  candFilter:el=>{const s=new Set(S.candFilter||["ok"]);s.has(el.dataset.v)?s.delete(el.dataset.v):s.add(el.dataset.v);S.candFilter=[...s];try{localStorage.setItem("kyo-candfilter",JSON.stringify(S.candFilter))}catch(x){}render()},
   candSort:el=>{S.candSort=el.dataset.v;try{localStorage.setItem("kyo-candsort",S.candSort)}catch(x){}render()},
   pctSort:el=>{S.pctSort=el.dataset.v;try{localStorage.setItem("kyo-pctsort",S.pctSort)}catch(x){}render()},
   attSort:el=>{S.attSort=el.dataset.v;try{localStorage.setItem("kyo-attsort",S.attSort)}catch(x){}render()},
@@ -2298,6 +2323,7 @@ try{S.secOpen=JSON.parse(localStorage.getItem("kyo-sec")||"{}")}catch(x){S.secOp
 try{S.attSort=localStorage.getItem("kyo-attsort")||"graad"}catch(x){S.attSort="graad"}
 try{S.pctSort=localStorage.getItem("kyo-pctsort")||"pct"}catch(x){S.pctSort="pct"}
 try{S.candSort=localStorage.getItem("kyo-candsort")||"status"}catch(x){S.candSort="status"}
+try{const cf=JSON.parse(localStorage.getItem("kyo-candfilter")||"null");S.candFilter=Array.isArray(cf)?cf:["ok"]}catch(x){S.candFilter=["ok"]}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.dojo){if(S.dirty)saveDraft();closeDojo()}});
 window.addEventListener("pagehide",()=>{if(S.dirty)saveDraft();if(S.cdirty)saveComp()});
 
